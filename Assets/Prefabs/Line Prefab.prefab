@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7700152818644601745}
   - component: {fileID: 3525713097161096779}
   - component: {fileID: 4441900167885748997}
+  - component: {fileID: -2689020849573562879}
   m_Layer: 0
   m_Name: Line Prefab
   m_TagString: Untagged
@@ -92,7 +93,7 @@ LineRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.2681141
+        value: 0.24978065
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -155,3 +156,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1af9a39b2c41a1d4da05368f7dcf0d58, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LineController
+--- !u!114 &-2689020849573562879
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6310412958984888033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a871b57451db0f74ab92b88ef7b81f18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
