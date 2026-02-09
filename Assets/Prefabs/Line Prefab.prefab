@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 7700152818644601745}
   - component: {fileID: 3525713097161096779}
   - component: {fileID: 4441900167885748997}
-  - component: {fileID: -2689020849573562879}
   m_Layer: 0
   m_Name: Line Prefab
   m_TagString: Untagged
@@ -36,7 +35,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!120 &3525713097161096779
 LineRenderer:
-  serializedVersion: 2
+  serializedVersion: 3
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -82,6 +81,7 @@ LineRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Positions:
   - {x: 0, y: 2, z: 0}
   - {x: 0, y: 0, z: 0}
@@ -140,7 +140,6 @@ LineRenderer:
     textureScale: {x: 1, y: 1}
     shadowBias: 0.5
     generateLightingData: 0
-  m_MaskInteraction: 0
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
@@ -153,18 +152,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 6310412958984888033}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1af9a39b2c41a1d4da05368f7dcf0d58, type: 3}
+  m_Script: {fileID: 11500000, guid: a58fcd2291c27b746aeac877df1cfea2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LineController
---- !u!114 &-2689020849573562879
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6310412958984888033}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a871b57451db0f74ab92b88ef7b81f18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
+  jointA: {fileID: 0}
+  jointB: {fileID: 0}

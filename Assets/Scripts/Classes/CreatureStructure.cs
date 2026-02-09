@@ -22,6 +22,7 @@ public class Structure
 public class Joint
 {
     public int id;
+    [NonSerialized]
     public List<Link> links = new List<Link>();
     public Vector3 position;
     public float radius;
