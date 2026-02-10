@@ -7,6 +7,7 @@ public class CreatureBuilder : MonoBehaviour
 {   
     public enum BuildMode { Spawning, Linking }
     public BuildMode currentMode = BuildMode.Spawning;
+    public LinkType currentLinkType = LinkType.Bone;
     public GameObject jointPrefab;
     public GameObject linkPrefab;
     public Structure currentStructure = new Structure();
@@ -15,7 +16,7 @@ public class CreatureBuilder : MonoBehaviour
     private GameObject selectedJointA = null;
     
     void Update()
-    {
+    {   
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             HandleInput();
@@ -99,21 +100,16 @@ void SpawnJoint(Vector2 pos)
     void CreateLink (GameObject a, GameObject b)
     {   
         if (a == b) return;
-        if (linkPrefab == null) 
-        {
-            Debug.LogError("Link Prefab is missing! Assign it in the Inspector.");
-            return;
-        }
 
         Joint dataA = a.GetComponent<JointIdentity>().jointData;
         Joint dataB = b.GetComponent<JointIdentity>().jointData;
 
-        // data struct logic
+        // create link data
         int newID = currentStructure.links.Count;
-        Link newLinkData = new Link(newID, dataA, dataB);
+        Link newLinkData = new Link(newID, dataA, dataB, currentLinkType);
         currentStructure.links.Add(newLinkData);
         
-        // physcis logic
+        // physcis setup
         DistanceJoint2D physicalLink = a.AddComponent<DistanceJoint2D>();
         physicalLink.connectedBody = b.GetComponent<Rigidbody2D>();
         physicalLink.distance = newLinkData.length;
@@ -121,20 +117,35 @@ void SpawnJoint(Vector2 pos)
         // set the distance to length calced in Link
         physicalLink.distance = newLinkData.length;
 
-        // visuals
-        GameObject linkVisual = Instantiate(linkPrefab);
-        linkVisual.name = $"Link_{dataA.id}_{dataB.id}";
-
-        // connect visuals
-        LinkFollower follower = linkVisual.GetComponent<LinkFollower>();
-        if (follower != null)
+        // visulas and components
+        if (linkPrefab != null)
         {
-            follower.SetTargets(a.transform, b.transform);
+            GameObject linkVisual = Instantiate(linkPrefab);
+            linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
+            LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
+
+            if (currentLinkType == LinkType.Muscle)
+            {
+                // set muscle visual
+                lr.startColor = Color.red;
+                lr.endColor = Color.red;
+
+                // add muscle script
+                Muscle m = a.AddComponent<Muscle>();
+                m.joint = physicalLink;
+                m.minLength = physicalLink.distance * 0.7f; // default to 70% of original
+                m.maxLength = physicalLink.distance * 1.3f; // default to 130% of original
+                m.strength = 5.0f;
+                m.damping = 0.5f;
+            }
+            else
+            {
+                // Set Bone Visuals
+                lr.startColor = Color.white;
+                lr.endColor = Color.white;
+            }
         }
 
-        Debug.Log($"Created Link {newID} between Joint {dataA.id} and {dataB.id}");
-
-        // reset select
         a.GetComponent<SpriteRenderer>().color = Color.white;
         selectedJointA = null;
     }

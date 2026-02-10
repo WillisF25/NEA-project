@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 [Serializable]
 public class Structure
@@ -12,9 +13,9 @@ public class Structure
     {
         joints.Add(new Joint(joints.Count, pos));
     }
-    public void AddLink(int linkID, Joint jointA, Joint jointB) 
+    public void AddLink(int linkID, Joint jointA, Joint jointB, LinkType type) 
     {
-        links.Add(new Link(linkID, jointA, jointB));
+        links.Add(new Link(linkID, jointA, jointB, type));
     }
 }
 
@@ -41,22 +42,26 @@ public class Joint
 }
 
 [Serializable]
+public enum LinkType { Bone, Muscle }
+
+[Serializable]
 public class Link
 {
     public int linkID;
     public Joint jointA;
     public Joint jointB;
     public float length;
-    public bool isMuscle;
+    public LinkType type;
     public float minLength;
     public float maxLength;
     public float strength;
     public float damping;
 
-    public Link(int linkID, Joint jointA, Joint jointB) {
+    public Link(int linkID, Joint jointA, Joint jointB, LinkType type) {
         this.linkID = linkID;
         this.jointA = jointA;
         this.jointB = jointB;
+        this.type = type;
         this.length = Vector3.Distance(jointA.position, jointB.position);
     }
 
