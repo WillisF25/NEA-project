@@ -1,7 +1,7 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
-using System.Runtime.CompilerServices;
 
 public class CreatureBuilder : MonoBehaviour
 {   
@@ -17,6 +17,11 @@ public class CreatureBuilder : MonoBehaviour
     
     void Update()
     {   
+        // check if mouse is currenlty over a ui button/panel
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) 
+        {
+            return; // dont do anything if clicking ui
+        }
         if (Mouse.current.leftButton.wasPressedThisFrame)
         {
             HandleInput();
@@ -149,4 +154,11 @@ void SpawnJoint(Vector2 pos)
         a.GetComponent<SpriteRenderer>().color = Color.white;
         selectedJointA = null;
     }
+
+    // UI button connectors
+    public void SetModeSpawning() => currentMode = BuildMode.Spawning;
+    public void SetModeLinking() => currentMode = BuildMode.Linking;
+
+    public void SetTypeBone() => currentLinkType = LinkType.Bone;
+    public void SetTypeMuscle() => currentLinkType = LinkType.Muscle;
 }

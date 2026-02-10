@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: -6261377416243360475}
   - component: {fileID: -4998436424771170441}
   - component: {fileID: 5386208655390763302}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Joint Prefab
   m_TagString: Joint
   m_Icon: {fileID: 0}
@@ -80,8 +80,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -1717629763
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: 3a0c6b6b81996e247827129b5921f640, type: 3}
@@ -156,7 +156,7 @@ CircleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Radius: 0.5
+  m_Radius: 1
 --- !u!114 &5386208655390763302
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 7700152818644601745}
   - component: {fileID: 3525713097161096779}
   - component: {fileID: 4441900167885748997}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Line Prefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -78,8 +78,8 @@ LineRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 2091853171
+  m_SortingLayer: 1
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Positions:
@@ -155,5 +155,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a58fcd2291c27b746aeac877df1cfea2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LineController
-  jointA: {fileID: 0}
-  jointB: {fileID: 0}
+  startObj: {fileID: 0}
+  endObj: {fileID: 0}
