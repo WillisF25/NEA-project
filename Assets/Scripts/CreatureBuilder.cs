@@ -5,12 +5,14 @@ using UnityEngine.InputSystem;
 
 public class CreatureBuilder : MonoBehaviour
 {   
-    public enum BuildMode { Spawning, Linking }
+    public enum BuildMode { Spawning, Linking}
     public BuildMode currentMode = BuildMode.Spawning;
     public LinkType currentLinkType = LinkType.Bone;
     public GameObject jointPrefab;
     public GameObject linkPrefab;
     public Structure currentStructure = new Structure();
+
+    public bool isSimulating = false;
 
     // To remember the fist click for a link
     private GameObject selectedJointA = null;
@@ -161,4 +163,47 @@ void SpawnJoint(Vector2 pos)
 
     public void SetTypeBone() => currentLinkType = LinkType.Bone;
     public void SetTypeMuscle() => currentLinkType = LinkType.Muscle;
+
+    public void ToggleSimulation()
+    {
+        isSimulating = !isSimulating; // toggle
+
+        // finds all joints (with tag Joint)
+        GameObject[] allJoints = GameObject.FindGameObjectsWithTag("Joint");
+
+        foreach (GameObject joint in allJoints)
+        {
+            Rigidbody2D rb = joint.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                if (isSimulating)
+                {
+                    // enable moving physics on the joint
+                    rb.bodyType = RigidbodyType2D.Dynamic;
+                }
+                else
+                {
+                    // turn off moving physcis
+                    rb.bodyType = RigidbodyType2D.Kinematic;
+                    rb.linearVelocity = Vector2.zero; // stop current movement
+                    rb.angularVelocity = 0f; // stop spin
+                }
+            }
+        }
+    }
+    public void ClearAll()
+    {
+        // destroy all links
+        GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
+        foreach (GameObject l in links) Destroy(l);
+
+        // destroy all joints
+        GameObject[] joints = GameObject.FindGameObjectsWithTag("Joint");
+        foreach (GameObject j in joints) Destroy(j);
+
+        // reset data
+        currentStructure = new Structure(); // wipe strucutre list
+        selectedJointA = null; // clear seleciton
+        isSimulating = false; // reset mode
+    }
 }
