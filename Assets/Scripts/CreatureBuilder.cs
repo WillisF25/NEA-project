@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
+using System.IO;
 
 public class CreatureBuilder : MonoBehaviour
 {   
@@ -76,6 +77,7 @@ void SpawnJoint(Vector2 pos)
         }
     
     // assign data to script
+    identity.id = data.id;
     identity.jointData = data;
     
     Debug.Log($"Spawned Joint {newID} at {pos}");
@@ -130,6 +132,15 @@ void SpawnJoint(Vector2 pos)
             GameObject linkVisual = Instantiate(linkPrefab);
             linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
             LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
+
+            LinkIdentity linkID = linkVisual.GetComponent<LinkIdentity>();
+            if (linkID == null) linkID = linkVisual.AddComponent<LinkIdentity>();
+
+            linkID.id = newID;
+            linkID.sourceID = a.GetComponent<JointIdentity>().id; 
+            linkID.targetID = b.GetComponent<JointIdentity>().id;
+            linkID.type = currentLinkType.ToString();
+            linkID.length = newLinkData.length;
 
             if (currentLinkType == LinkType.Muscle)
             {
@@ -191,6 +202,7 @@ void SpawnJoint(Vector2 pos)
             }
         }
     }
+
     public void ClearAll()
     {
         // destroy all links
@@ -205,5 +217,48 @@ void SpawnJoint(Vector2 pos)
         currentStructure = new Structure(); // wipe strucutre list
         selectedJointA = null; // clear seleciton
         isSimulating = false; // reset mode
+    }
+
+    public void SaveCreature()
+    {
+        // create the container
+        CreatureData data = new CreatureData();
+
+        // find all joints and save their positions
+        GameObject[] allJoints = GameObject.FindGameObjectsWithTag("Joint");
+        
+        // map the gameobj to its id for links later
+        foreach (GameObject j in allJoints)
+        {
+            JointIdentity idComponent = j.GetComponent<JointIdentity>();
+            // just save the raw numbers
+            data.joints.Add(new JointData(idComponent.id, j.transform.position.x, j.transform.position.y));
+        }
+
+        // find all links and save their connections
+        GameObject[] allLinks = GameObject.FindGameObjectsWithTag("Link");
+        foreach (GameObject l in allLinks)
+        {
+            LinkIdentity linkInfo = l.GetComponent<LinkIdentity>(); 
+            if(linkInfo != null)
+            {
+                data.links.Add(new LinkData(
+                    linkInfo.id, 
+                    linkInfo.sourceID, 
+                    linkInfo.targetID, 
+                    linkInfo.type.ToString(), 
+                    linkInfo.length
+                ));
+            }
+        }
+
+        // convert to JSON
+        string json = JsonUtility.ToJson(data, true); // 'true' makes it pretty print
+
+        // write to file
+        string path = Application.persistentDataPath + "/creature.json";
+        File.WriteAllText(path, json);
+
+        Debug.Log("Saved to: " + path);
     }
 }
