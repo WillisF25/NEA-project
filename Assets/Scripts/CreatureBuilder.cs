@@ -261,4 +261,78 @@ void SpawnJoint(Vector2 pos)
 
         Debug.Log("Saved to: " + path);
     }
+
+    public void LoadCreature()
+    {
+        string path = Application.persistentDataPath + "/creature.json";
+        
+        // check if file exists
+        if (!File.Exists(path)) 
+        {
+            Debug.LogWarning("No save file found at: " + path);
+            return;
+        }
+
+        // clear current scene
+        ClearAll();
+
+        // read and parse json
+        string json = File.ReadAllText(path);
+        CreatureData data = JsonUtility.FromJson<CreatureData>(json);
+
+        // rebuild joints , and map ids to gameobjs
+        Dictionary<int, GameObject> loadedJoints = new Dictionary<int, GameObject>();
+
+        foreach (JointData jData in data.joints)
+        {
+            // same as spawn logic
+            Vector2 pos = new Vector2(jData.x, jData.y);
+
+            // spawn manually to set the wanted immediately
+            GameObject newJoint = Instantiate(jointPrefab, pos, Quaternion.identity);
+            
+            // add Identity
+            JointIdentity idComp = newJoint.GetComponent<JointIdentity>();
+            if (idComp == null) idComp = newJoint.AddComponent<JointIdentity>();
+            
+            idComp.id = jData.id;
+            idComp.jointData = new Joint(jData.id, pos);
+            
+            // add to list so builder knows it
+            currentStructure.joints.Add(idComp.jointData);
+
+            // add to dictionary for link building step
+            loadedJoints.Add(jData.id, newJoint);
+        }
+
+        // rebuild Links
+        foreach (LinkData lData in data.links)
+        {
+            // find the two joints this link connects
+            if (loadedJoints.ContainsKey(lData.sourceJointID) && loadedJoints.ContainsKey(lData.targetJointID))
+            {
+                GameObject bodyA = loadedJoints[lData.sourceJointID];
+                GameObject bodyB = loadedJoints[lData.targetJointID];
+
+                // set the builder mode temporarily to create the right type
+                if (lData.type == "Bone") currentLinkType = LinkType.Bone;
+                else currentLinkType = LinkType.Muscle;
+
+                CreateLink(bodyA, bodyB);
+            }
+        }
+        
+        Debug.Log("Creature Loaded from: " + path);
+    }
+
+    public void DeleteSaveFile()
+    {
+        string path = Application.persistentDataPath + "/creature.json";
+
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+            Debug.Log("Save file permanently deleted from disk.");
+        }
+    }
 }
