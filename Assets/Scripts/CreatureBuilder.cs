@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections.Generic;
 using UnityEngine.InputSystem;
-using System.IO;
+using UnityEngine.SceneManagement;
 
 public class CreatureBuilder : MonoBehaviour
 {   
@@ -252,33 +252,20 @@ void SpawnJoint(Vector2 pos)
             }
         }
 
-        // convert to JSON
-        string json = JsonUtility.ToJson(data, true); // 'true' makes it pretty print
-
-        // write to file
-        string path = Application.persistentDataPath + "/creature.json";
-        File.WriteAllText(path, json);
-
-        Debug.Log("Saved to: " + path);
+        // send data to manager
+        SaveLoadManager.SaveCreatureStructure(data, "creature.json");
     }
 
     public void LoadCreature()
     {
-        string path = Application.persistentDataPath + "/creature.json";
+        // ask manager for the data
+        CreatureData data = SaveLoadManager.LoadCreatureStructure("creature.json");        
         
-        // check if file exists
-        if (!File.Exists(path)) 
-        {
-            Debug.LogWarning("No save file found at: " + path);
-            return;
-        }
+        // presence check
+        if (data == null) return;
 
         // clear current scene
         ClearAll();
-
-        // read and parse json
-        string json = File.ReadAllText(path);
-        CreatureData data = JsonUtility.FromJson<CreatureData>(json);
 
         // rebuild joints , and map ids to gameobjs
         Dictionary<int, GameObject> loadedJoints = new Dictionary<int, GameObject>();
@@ -322,17 +309,19 @@ void SpawnJoint(Vector2 pos)
             }
         }
         
-        Debug.Log("Creature Loaded from: " + path);
     }
 
     public void DeleteSaveFile()
     {
-        string path = Application.persistentDataPath + "/creature.json";
+        SaveLoadManager.DeleteSaveFile("creature.json");
+    }
 
-        if (File.Exists(path))
-        {
-            File.Delete(path);
-            Debug.Log("Save file permanently deleted from disk.");
-        }
+    public void StartSimulation()
+    {
+        // save the current creature so next scene can find it
+        SaveCreature();
+
+        // load simulation scene
+        SceneManager.LoadScene("Simulation");
     }
 }
