@@ -31,6 +31,7 @@ public class SimulationManager : MonoBehaviour
             // adding the rb in scene
             Rigidbody2D rb = jObj.GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic; 
+            rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // keep creature simulated
 
             loadedJoints.Add(jData.id, jObj);
             
