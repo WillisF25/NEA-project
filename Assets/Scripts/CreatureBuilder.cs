@@ -318,6 +318,13 @@ void SpawnJoint(Vector2 pos)
 
     public void StartSimulation()
     {
+        // check if creature actually has joints
+        if (currentStructure.joints.Count == 0)
+        {
+            Debug.LogWarning("Cannot simulate, no creature joints found");
+            // ui popup later
+            return;
+        }
         // save the current creature so next scene can find it
         SaveCreature();
 

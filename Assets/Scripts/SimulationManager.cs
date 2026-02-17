@@ -78,4 +78,10 @@ public class SimulationManager : MonoBehaviour
             lr.endColor = Color.white;
         }
     }
+
+        public void BackToBuilder()
+        {
+            // load builder scene
+            UnityEngine.SceneManagement.SceneManager.LoadScene("CreatureBuilder");
+        }
 }
