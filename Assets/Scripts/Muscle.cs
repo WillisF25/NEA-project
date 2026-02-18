@@ -18,17 +18,13 @@ public class Muscle : MonoBehaviour
             joint = GetComponent<DistanceJoint2D>();
     }
 
-    void Update()
+    public void SetMuscleExtension(float value)
     {
         if (joint == null) return;
-
-        // calc the sine wave
-        float phase = Mathf.Sin(Time.time * frequency * 2f * Mathf.PI);
-        
-        // map -1 to 1 sine wave range to from 0 to 1
-        float normalisedWave = (phase + 1f) / 2f;
+        // map (-1 to 1) nn output range to from 0 to 1
+        float t = (value + 1f) / 2f; 
 
         // interpolate the dist between min and max
-        joint.distance = Mathf.Lerp(minLength, maxLength, normalisedWave);
+        joint.distance = Mathf.Lerp(minLength, maxLength, t);
     }
 }

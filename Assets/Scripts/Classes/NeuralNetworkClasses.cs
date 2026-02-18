@@ -5,16 +5,85 @@ public class NeuralNetwork {
     private List<Node> nodes = new List<Node>();
     private List<Connection> connections = new List<Connection>();
 
+    // list for fast access in ForwardPass
+    private List<Node> inputNodes = new List<Node>();
+    private List<Node> outputNodes = new List<Node>();
+
     public NeuralNetwork(Genome genome) {
-        // create Nodes and Connections from genes
-        // link them
+        // CREATE NODES
+        // a temp dict to find Node obj using its id
+        Dictionary<int, Node> nodeMap = new Dictionary<int, Node>();
+
+        // instantiate the neurons
+        foreach (NodeGene gene in genome.nodes)
+        {
+            // create the Node form blueprint
+            Node newNode = new Node(gene);
+            nodes.Add(newNode);
+
+            // add to registry
+            nodeMap.Add(gene.innovationID, newNode);
+
+            // categorise
+            if (gene.nodeType == "INPUT") inputNodes.Add(newNode);
+            else if (gene.nodeType == "OUTPUT") outputNodes.Add(newNode);
+        }
+
+        // LINK CONNECTIONS
+        foreach (ConnectionGene gene in genome.connections)
+        {
+            if (gene.enabled)
+            {
+                // presence check for both nodes
+                if (nodeMap.ContainsKey(gene.inputNode) && nodeMap.ContainsKey(gene.outputNode))
+                {
+                    Node input = nodeMap[gene.inputNode];
+                    Node output = nodeMap[gene.outputNode];
+
+                    // create the conn obj
+                    Connection newConn = new Connection(input, output, gene);
+
+                    // tell destination node it has a new incoming conn
+                    output.IncomingConnections.Add(newConn);
+                }
+
+            }
+        }
     }
 
     public List<float> ForwardPass(List<float> inputs) 
     { 
-        // set innodes outputs
-        // calc hidden/ output nodes
-        return new List<float>(); 
+        // ensure num of sensors on the creature matches with num of input neurons
+        if (inputs.Count != inputNodes.Count)
+        {   
+            // if mismatch
+            return new List<float>();
+        }
+
+        // inject the inputs
+        for (int i=0; i < inputNodes.Count; i++)
+        {
+            inputNodes[i].Output = inputs[i];
+            inputNodes[i].InputSum = inputs[i];
+        }
+
+        // calculation loop
+        foreach (Node node in nodes)
+        {
+            if (node.NodeType != "INPUT")
+            {
+                node.Calculate();
+            }
+        }
+
+        // get outputs
+        List<float> outputs = new List<float>();
+        foreach (Node node in outputNodes)
+        {
+            outputs.Add(node.Output);
+        }
+
+        return outputs;
     }
 }
 
