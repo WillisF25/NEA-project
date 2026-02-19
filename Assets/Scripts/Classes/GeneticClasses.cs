@@ -1,5 +1,7 @@
+using UnityEngine;
 using System;
 using System.Collections.Generic;
+using Mono.Cecil;
 
 [Serializable]
 public class Genome {
@@ -13,10 +15,115 @@ public class Genome {
         this.genomeID = genomeID;
     }
 
-    // later code
-    public void Mutate() { }
-    public void AddConnection() { }
-    public void AddNode() { }
+    // default values for now
+    public void Mutate(Innovation innovation)
+    {
+        // mutate weights
+        if (UnityEngine.Random.value < 0.8f) 
+        {
+            MutateWeights();
+        }
+
+        // add Connection 
+        if (UnityEngine.Random.value < 0.05f) 
+        {
+            AddConnection(innovation);
+        }
+
+        // add Node
+        if (UnityEngine.Random.value < 0.01f) 
+        {
+            AddNode(innovation);
+        }
+    }
+    public void MutateWeights()
+    {
+        foreach (ConnectionGene conn in connections)
+        {
+            if (UnityEngine.Random.value < 0.5f)
+            {
+                // preturb existing weight slightly
+                conn.weight += UnityEngine.Random.Range(-0.5f, 0.5f);
+            }
+            else if (UnityEngine.Random.value < 0.05f) // small chance for replace
+            {
+                conn.weight = UnityEngine.Random.Range(-2f, 2f);
+            }
+        }
+    }
+    public void AddConnection(Innovation innovation)
+    {
+        // separate nodes inot potential sources and potential targets
+        // input nodes can only be sources, output nodes canonly be targets
+        // hiddne nodes can be both
+        List<NodeGene> potentialSources = new List<NodeGene>();
+        List<NodeGene> potentialTargets = new List<NodeGene>();
+
+        foreach (var node in nodes)
+        {
+            if (node.nodeType != "OUTPUT") potentialSources.Add(node);
+            if (node.nodeType != "INPUT") potentialTargets.Add(node);
+        }
+
+        // pick randomly to find an unconnected pair
+        int attempts = 0;
+        while (attempts < 30) // avoid infinite loops
+        {
+            attempts++;
+
+            NodeGene source = potentialSources[UnityEngine.Random.Range(0, potentialSources.Count)];
+            NodeGene target = potentialTargets[UnityEngine.Random.Range(0, potentialTargets.Count)];
+
+            // no self connections
+            if (source.innovationID == target.innovationID) continue;
+
+            // check if conneciton already exists
+            if (ConnectionExists(source.innovationID, target.innovationID)) continue;
+
+            // create the connection
+            int id = innovation.GetInnovationNumber(source.innovationID, target.innovationID, "AddConnection");
+            connections.Add(new ConnectionGene(id, source.innovationID, target.innovationID, UnityEngine.Random.Range(-1f, 1f), true));
+            return;
+        }
+    }
+    private bool ConnectionExists(int node1, int node2)
+    {
+        foreach (var conn in connections)
+        {
+            if (conn.inputNode == node1 && conn.outputNode == node2) return true;
+        }
+        return false;
+    }
+
+    public void AddNode(Innovation innovation)
+    {
+        // filter for only enabled connections
+        List<ConnectionGene> enabledConnections = connections.FindAll(c => c.enabled);
+        if (enabledConnections.Count == 0) return;
+
+        // select a randome connection to split
+        ConnectionGene connToSplit = enabledConnections[UnityEngine.Random.Range(0, enabledConnections.Count)];
+
+        // disable the old one
+        connToSplit.enabled = false;
+
+        // create new node
+        // pass id of the conn to split so tracker can check if this split has happened before
+        int newNodeID = innovation.GetNodeInnovationNumber(connToSplit.innovationID);    
+        NodeGene newNode = new NodeGene(newNodeID, "HIDDEN", "Sigmoid", 0f);
+        nodes.Add(newNode);
+
+        // link 1: source to newnode (weight = 1)
+        int link1_ID = innovation.GetInnovationNumber(connToSplit.inputNode, newNodeID, "AddConnection");
+        ConnectionGene link1 = new ConnectionGene(link1_ID, connToSplit.inputNode, newNodeID, 1.0f, true);
+
+        // link2: newnode to target (weight = old weight)
+        int link2_ID = innovation.GetInnovationNumber(newNodeID, connToSplit.outputNode, "AddConnection");
+        ConnectionGene link2 = new ConnectionGene(link2_ID, newNodeID, connToSplit.outputNode, connToSplit.weight, true);
+
+        connections.Add(link1);
+        connections.Add(link2);
+    }
     public float CompatibilityDistance(Genome otherGenome) {return 0f;}
     public void SortTopology() {}
 }

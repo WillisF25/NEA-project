@@ -3,17 +3,62 @@ using System.Collections.Generic;
 using System.IO;
 
 public class Innovation {
-    // increments when a truly new mutation occurs
+    // increments when a unique mutation occurs
     public int innovationTracker = 0;
     
-    
+    // key: InnovationID
+    // value: [string mutationType, int nodeInID, int nodeOutID]
+    // or for nodes: [string mutationType, int oldConnectionID]
     public Dictionary<int, List<object>> innovationRecords = new Dictionary<int, List<object>>();
 
-    // code later
-    public int GetInnovationNumber(NodeGene nodeIn, NodeGene nodeOut, string mutationType) 
+    // checks if this mutation has happend before this gen
+    // returns the existing id if found, or new id if not
+    public int GetInnovationNumber(int nodeInID, int nodeOutID, string mutationType) 
     {
-        return 0; // returns a id for the specific muatiaon
+        // loop through existing records
+        foreach (var record in innovationRecords)
+        {
+            string type = (string)record.Value[0];
+            int inID = (int)record.Value[1];
+            int outID = (int)record.Value[2];
+
+            if (type == mutationType && inID == nodeInID && outID == nodeOutID)
+            {
+                return record.Key; // return exsiting id
+            }
+        }
+
+        // brand new muation if got here
+        int newID = innovationTracker;
+
+        // record it
+        List<object> newRecord = new List<object> { mutationType, nodeInID, nodeOutID };
+        innovationRecords.Add(newID, newRecord);
+
+        // increment global tracker for next unique muataion
+        innovationTracker++;
+
+        return newID;
     }
+
+    // helper for splitting a connection to add a node
+    public int GetNodeInnovationNumber(int connectionID)
+    {
+        string type = "AddNode";
+        foreach (var record in innovationRecords)
+        {
+            if ((string)record.Value[0] == type && (int)record.Value[1] == connectionID)
+            {
+                return record.Key;
+            }
+        }
+
+        int newID = innovationTracker;
+        innovationRecords.Add(newID, new List<object> { type, connectionID, -1 }); // -1 as placeholder
+        innovationTracker++;
+        return newID;
+    }
+
     public void SetNewConnection(NodeGene inputNode, NodeGene outputNode) {}
     public void SetNewNode(ConnectionGene splittedConnection) {}
 }
