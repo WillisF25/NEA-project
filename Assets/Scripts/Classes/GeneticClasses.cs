@@ -124,6 +124,77 @@ public class Genome {
         connections.Add(link1);
         connections.Add(link2);
     }
+
+    public Genome Crossover(Genome partner)
+    {
+        // determine relative fitness
+        bool equalFitness = Mathf.Approximately(this.fitness, partner.fitness);
+        Genome fitter = this.fitness > partner.fitness ? this : partner;
+        Genome loser = this.fitness > partner.fitness ? partner : this;
+
+        Genome child = new Genome(fitter.genomeID);
+
+        // put loser genes in dict for quick matching
+        Dictionary<int, ConnectionGene> loserGenes = new Dictionary<int, ConnectionGene>();
+        foreach (var gene in loser.connections) loserGenes.Add(gene.innovationID, gene);
+
+        // ingerit connections
+        foreach (ConnectionGene fitterGene in fitter.connections)
+        {
+            if (loserGenes.ContainsKey(fitterGene.innovationID))
+            {
+                // matching: average weight
+                ConnectionGene loserGene = loserGenes[fitterGene.innovationID];
+                float averagedWeight = (fitterGene.weight + loserGene.weight) / 2f;
+                
+                bool isEnabled = true;
+                if ((!fitterGene.enabled || !loserGene.enabled) && UnityEngine.Random.value < 0.75f)
+                    isEnabled = false;
+
+                child.connections.Add(new ConnectionGene(fitterGene.innovationID, fitterGene.inputNode, fitterGene.outputNode, averagedWeight, isEnabled));
+            }
+            else
+            {
+                // disjoint/excess: inherit from fitter
+                child.connections.Add(new ConnectionGene(fitterGene.innovationID, fitterGene.inputNode, fitterGene.outputNode, fitterGene.weight, fitterGene.enabled));
+            }
+        }
+
+        // if fitness is equal, also take disjoint genes from the loser
+        if (equalFitness)
+        {
+            Dictionary<int, ConnectionGene> fitterGenes = new Dictionary<int, ConnectionGene>();
+            foreach (var gene in fitter.connections) fitterGenes.Add(gene.innovationID, gene);
+
+            foreach (ConnectionGene loserGene in loser.connections)
+            {
+                if (!fitterGenes.ContainsKey(loserGene.innovationID))
+                {
+                    child.connections.Add(new ConnectionGene(loserGene.innovationID, loserGene.inputNode, loserGene.outputNode, loserGene.weight, loserGene.enabled));
+                }
+            }
+        }
+
+        // node Inheritance
+        HashSet<int> requiredNodes = new HashSet<int>();
+        foreach (var conn in child.connections) { requiredNodes.Add(conn.inputNode); requiredNodes.Add(conn.outputNode); }
+
+        // use combined list of nodes from both parents to make sure we find all ids
+        List<NodeGene> allPossibleNodes = new List<NodeGene>(fitter.nodes);
+        allPossibleNodes.AddRange(loser.nodes);
+
+        foreach (var node in allPossibleNodes)
+        {
+            if (requiredNodes.Contains(node.innovationID))
+            {
+                // avoid duplicates
+                if (child.nodes.Find(n => n.innovationID == node.innovationID) == null)
+                    child.nodes.Add(new NodeGene(node.innovationID, node.nodeType, node.activation, node.bias));
+            }
+        }
+
+        return child;
+    }
     public float CompatibilityDistance(Genome otherGenome) {return 0f;}
     public void SortTopology() {}
 }
