@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 
 public class Innovation {
-    public int innovationTracker;
+    // increments when a truly new mutation occurs
+    public int innovationTracker = 0;
+    
+    
     public Dictionary<int, List<object>> innovationRecords = new Dictionary<int, List<object>>();
 
     // code later

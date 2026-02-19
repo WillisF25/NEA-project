@@ -20,6 +20,9 @@ public class SimulationManager : MonoBehaviour
         CreatureData data = SaveLoadManager.LoadCreatureStructure("creature.json");
         if (data == null) return;
 
+        // list to hold brain refs
+        List<Transform> spawnedJoints = new List<Transform>();
+        List<Muscle> spawnedMuscles = new List<Muscle>();
         Dictionary<int, GameObject> loadedJoints = new Dictionary<int, GameObject>();
 
         // spawn joint
@@ -34,6 +37,7 @@ public class SimulationManager : MonoBehaviour
             rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // keep creature simulated
 
             loadedJoints.Add(jData.id, jObj);
+            spawnedJoints.Add(jObj.transform); // add to list for brain
             
             // set first joint as camera target
             if (focusTarget == null) focusTarget = jObj.transform;
@@ -44,12 +48,58 @@ public class SimulationManager : MonoBehaviour
         {
             if (loadedJoints.ContainsKey(lData.sourceJointID) && loadedJoints.ContainsKey(lData.targetJointID))
             {
-                CreatePhysicalLink(loadedJoints[lData.sourceJointID], loadedJoints[lData.targetJointID], lData);
+                Muscle m = CreatePhysicalLink(loadedJoints[lData.sourceJointID], loadedJoints[lData.targetJointID], lData);
+                if (m != null) spawnedMuscles.Add(m);
             }
         }
+
+        // attach the brain
+        CreatureBrain brain = gameObject.AddComponent<CreatureBrain>();
+
+        // dummy Genome for testing
+        Genome testGenome = CreateTestGenome(spawnedJoints.Count, spawnedMuscles.Count);
+
+        // start the brain
+        brain.Init(testGenome, spawnedMuscles, spawnedJoints);
     }
 
-    void CreatePhysicalLink(GameObject a, GameObject b, LinkData lData)
+    Genome CreateTestGenome(int jointCount, int muscleCount)
+    {
+        Genome g = new Genome(0);
+        int innovation = 0;
+
+        // create 1 input per joint and plus one for oscillator
+        int oscillatorIndex = 0;
+        int inputCount = 1 + jointCount;
+        for (int i = 0; i < inputCount; i++)
+            g.nodes.Add(new NodeGene(innovation++, "INPUT", "Linear", 0));
+
+        // create 1 output per muscle
+        int firstOutputIndex = innovation;
+        for (int i = 0; i < muscleCount; i++)
+            g.nodes.Add(new NodeGene(innovation++, "OUTPUT", "Tanh", 0));
+
+        // connects the oscillator to every muscle
+        int connectionInnovation = 0;
+        for (int i = 0; i < muscleCount; i++)
+        {
+            // connect node 0 (oscillator) to node (firstOutputIndex + i)
+            // randome weight between -1 and 1 for variety
+            float randomWeight = Random.Range(-1.0f, 1.0f);
+
+            g.connections.Add(new ConnectionGene(
+                connectionInnovation++,
+                oscillatorIndex,
+                firstOutputIndex + i,
+                randomWeight,
+                true
+            ));
+        }
+
+        return g;
+    }
+
+    Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData)
     {
         // physics setup
         DistanceJoint2D physicalLink = a.AddComponent<DistanceJoint2D>();
@@ -71,12 +121,16 @@ public class SimulationManager : MonoBehaviour
             m.joint = physicalLink;
             m.minLength = lData.length * 0.7f;
             m.maxLength = lData.length * 1.3f;
+
+            return m; // return muscle component
         }
         else
         {
             lr.startColor = Color.white;
             lr.endColor = Color.white;
         }
+
+        return null; // return null if its bone
     }
 
         public void BackToBuilder()
