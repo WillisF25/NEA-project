@@ -1,7 +1,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using Mono.Cecil;
 
 [Serializable]
 public class Genome {
@@ -195,7 +194,60 @@ public class Genome {
 
         return child;
     }
-    public float CompatibilityDistance(Genome otherGenome) {return 0f;}
+
+    public float GetCompatibilityDistance(Genome partner, float c1, float c2, float c3)
+    {
+        int matching = 0;
+        int disjoint = 0;
+        int excess = 0;
+        float weightDiffSum = 0;
+
+        // sort both connection lists by Innovation ID
+        List<ConnectionGene> genes1 = new List<ConnectionGene>(this.connections);
+        List<ConnectionGene> genes2 = new List<ConnectionGene>(partner.connections);
+        genes1.Sort((a, b) => a.innovationID.CompareTo(b.innovationID));
+        genes2.Sort((a, b) => a.innovationID.CompareTo(b.innovationID));
+
+        int i = 0;
+        int j = 0;
+
+        // parallel iteration
+        while (i < genes1.Count && j < genes2.Count)
+        {
+            ConnectionGene g1 = genes1[i];
+            ConnectionGene g2 = genes2[j];
+
+            if (g1.innovationID == g2.innovationID)
+            {
+                matching++;
+                weightDiffSum += Mathf.Abs(g1.weight - g2.weight);
+                i++;
+                j++;
+            }
+            else if (g1.innovationID < g2.innovationID)
+            {
+                disjoint++;
+                i++;
+            }
+            else
+            {
+                disjoint++;
+                j++;
+            }
+        }
+
+        // calculate Excess (the genes left over at the end of the longer list)
+        excess = (genes1.Count - i) + (genes2.Count - j);
+
+        // normalization factor N (the size of the larger genome)
+        float n = Mathf.Max(genes1.Count, genes2.Count);
+        if (n < 1) n = 1; // Prevent division by zero
+
+        float avgWeightDiff = matching > 0 ? weightDiffSum / matching : 0;
+
+        // formula from neat paper
+        return (c1 * excess / n) + (c2 * disjoint / n) + (c3 * avgWeightDiff);
+    }
     public void SortTopology() {}
 }
 

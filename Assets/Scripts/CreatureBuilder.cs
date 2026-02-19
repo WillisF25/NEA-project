@@ -15,7 +15,7 @@ public class CreatureBuilder : MonoBehaviour
 
     public bool isSimulating = false;
 
-    // To remember the fist click for a link
+    // to remember the fist click for a link
     private GameObject selectedJointA = null;
     
     void Update()
@@ -158,7 +158,7 @@ void SpawnJoint(Vector2 pos)
             }
             else
             {
-                // Set Bone Visuals
+                // set bone visuals
                 lr.startColor = Color.white;
                 lr.endColor = Color.white;
             }
