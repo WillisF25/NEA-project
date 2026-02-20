@@ -249,6 +249,14 @@ public class Genome {
         return (c1 * excess / n) + (c2 * disjoint / n) + (c3 * avgWeightDiff);
     }
     public void SortTopology() {}
+
+    public Genome Clone()
+    {
+        Genome clone = new Genome(this.genomeID);
+        foreach (NodeGene n in nodes) clone.nodes.Add(new NodeGene(n.innovationID, n.nodeType, n.activation, n.bias));
+        foreach (ConnectionGene c in connections) clone.connections.Add(new ConnectionGene(c.innovationID, c.inputNode, c.outputNode, c.weight, c.enabled));
+        return clone;
+    }
 }
 
 [Serializable]
