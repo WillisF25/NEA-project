@@ -5,21 +5,70 @@ public class SimulationManager : MonoBehaviour
 {
     public GameObject jointPrefab;
     public GameObject linkPrefab;
+
+    // NEAT variables
+    public NEAT neatSystem;
+    public int populationSize = 50; // default for now
+    public float generationTimeLimit = 15f;
+    private float globalTimer;
+
+    private CreatureData data;
     
     // use this to tell the camera which joint to follow
     public static Transform focusTarget; 
 
     void Start()
+    {   
+        // load the structure blueprint
+        data = SaveLoadManager.LoadCreatureStructure("creature.json");
+        if (data == null)
+        {
+            Debug.LogError("No creature data found.");
+            return;
+        }
+
+        // count inputs (joints) and outputs (muscles) from bluprint
+        int jointCount = data.joints.Count;
+        int muscleCount = 0;
+        foreach (var lData in data.links)
+        {
+            if (lData.type == "Muscle") muscleCount++;
+        }
+
+        // initialise NEAT
+        neatSystem = new NEAT();
+        neatSystem.populationLimit = populationSize;
+        neatSystem.trainingGoal = "Walk Right";
+
+        // initialise gen 0
+        neatSystem.InitialisePopulation(jointCount, muscleCount);
+
+        // start gen 0
+        SpawnPopulation();
+        globalTimer = generationTimeLimit;
+    }
+
+    void Update()
     {
-        //AssembleCreature();
+        // timer
+        globalTimer -= Time.deltaTime;
+
+        if (globalTimer <= 0)
+        {
+            // advance the genetaion
+        }
+    }
+
+    void SpawnPopulation()
+    {
+        foreach (Creature c in neatSystem.population)
+        {
+            AssembleCreature(c.genome);
+        }
     }
 
     void AssembleCreature(Genome brainGenome)
     {
-        // get data
-        CreatureData data = SaveLoadManager.LoadCreatureStructure("creature.json");
-        if (data == null) return;
-
         // list to hold brain refs
         List<Transform> spawnedJoints = new List<Transform>();
         List<Muscle> spawnedMuscles = new List<Muscle>();

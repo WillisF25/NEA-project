@@ -88,7 +88,7 @@ public class NEAT : MonoBehaviour {
                 true
                 ));
           }
-
+          
         return g;
     }
         
