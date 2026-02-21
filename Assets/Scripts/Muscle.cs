@@ -8,14 +8,14 @@ public class Muscle : MonoBehaviour
     // default vals for now
     public float minLength = 0.5f;
     public float maxLength = 1.5f;
-    public float strength = 5.0f;
-    public float damping = 0.5f;
-    public float frequency = 1.0f; // how many pluse per second
+    public float strength = 5.0f; // expand/contract speed
 
     void Start()
     {
-        if (joint == null)
-            joint = GetComponent<DistanceJoint2D>();
+        if (joint == null) joint = GetComponent<DistanceJoint2D>();
+
+        // tell joint to not manage its own distance
+        joint.autoConfigureConnectedAnchor = false;
     }
 
     public void SetMuscleExtension(float value)
@@ -25,6 +25,9 @@ public class Muscle : MonoBehaviour
         float t = (value + 1f) / 2f; 
 
         // interpolate the dist between min and max
-        joint.distance = Mathf.Lerp(minLength, maxLength, t);
+        float targetdistance = Mathf.Lerp(minLength, maxLength, t);
+
+        // friction fix
+        joint.distance = Mathf.MoveTowards(joint.distance, targetdistance, strength);
     }
 }

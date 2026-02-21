@@ -110,7 +110,7 @@ Rigidbody2D:
   m_LinearDamping: 0
   m_AngularDamping: 0.05
   m_GravityScale: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 2102802e8d2a8e344ae3ea7cd234fabe, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -131,7 +131,7 @@ CircleCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 2102802e8d2a8e344ae3ea7cd234fabe, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -169,6 +169,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 06f17630ef8b27c4ab3a0e802821c8ab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JointIdentity
+  id: 0
   jointData:
     id: 0
     position: {x: 0, y: 0, z: 0}

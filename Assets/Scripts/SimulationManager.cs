@@ -39,6 +39,7 @@ public class SimulationManager : MonoBehaviour
         neatSystem = new NEAT();
         neatSystem.populationLimit = populationSize;
         neatSystem.trainingGoal = "Walk Right";
+        neatSystem.generationNumber = 0;
 
         // initialise gen 0
         neatSystem.InitialisePopulation(jointCount, muscleCount);
@@ -46,6 +47,7 @@ public class SimulationManager : MonoBehaviour
         // start gen 0
         SpawnPopulation();
         globalTimer = generationTimeLimit;
+        Debug.Log($"Started Generation {neatSystem.generationNumber}");
     }
 
     void Update()
@@ -70,7 +72,8 @@ public class SimulationManager : MonoBehaviour
     void AdvanceGeneration()
     {
         // evaluate
-        neatSystem.EvaluateFitness();
+        CreatureFollower[] followers = Object.FindObjectsByType<CreatureFollower>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+        neatSystem.EvaluateFitness(followers);
 
         // evolve
         neatSystem.Speciate();
@@ -90,7 +93,8 @@ public class SimulationManager : MonoBehaviour
         globalTimer = generationTimeLimit;
         
         // increment generation number
-        Debug.Log($"Started Generation {neatSystem.generationNumber++}");
+        neatSystem.generationNumber++;
+        Debug.Log($"Started Generation {neatSystem.generationNumber}");
     }
 
     void AssembleCreature(Genome genome)

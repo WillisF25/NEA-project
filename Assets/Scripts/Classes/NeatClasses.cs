@@ -1,7 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class NEAT : MonoBehaviour {
+[System.Serializable]
+public class NEAT {
     public int generationNumber;
     public int populationLimit;
     public List<Creature> population = new List<Creature>();
@@ -72,7 +73,7 @@ public class NEAT : MonoBehaviour {
         {
             // connect node 0 (oscillator) to node (firstOutputIndex + i)
             // randome weight between -1 and 1 for variety
-             float randomWeight = Random.Range(-1.0f, 1.0f);
+             float randomWeight = UnityEngine.Random.Range(-1.0f, 1.0f);
 
             int innovationID = globalInnovationTracker.GetInnovationID(
             oscillatorIndex,
@@ -93,11 +94,8 @@ public class NEAT : MonoBehaviour {
     }
         
     public void SimulateGeneration() {}
-    public void EvaluateFitness()
+    public void EvaluateFitness(CreatureFollower[] followers)
     {
-        // find every follower scirpt
-        CreatureFollower[] followers = FindObjectsByType<CreatureFollower>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-
         // map performce back to genetic data
         foreach (CreatureFollower follower in followers)
         {
@@ -304,7 +302,8 @@ public class Specie {
     }
 }
 
-public class Creature : MonoBehaviour {
+[System.Serializable]
+public class Creature {
     public int creatureID;
     public Structure structure;
     public Genome genome;

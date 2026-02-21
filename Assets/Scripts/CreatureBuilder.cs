@@ -154,7 +154,6 @@ void SpawnJoint(Vector2 pos)
                 m.minLength = physicalLink.distance * 0.7f; // default to 70% of original
                 m.maxLength = physicalLink.distance * 1.3f; // default to 130% of original
                 m.strength = 5.0f;
-                m.damping = 0.5f;
             }
             else
             {
