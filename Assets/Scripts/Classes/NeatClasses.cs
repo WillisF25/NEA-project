@@ -88,30 +88,30 @@ public class NEAT : MonoBehaviour {
                 true
                 ));
           }
-          
+
         return g;
     }
         
     public void SimulateGeneration() {}
     public void EvaluateFitness()
     {
-        foreach (Creature creature in population)
+        // find every follower scirpt
+        CreatureFollower[] followers = FindObjectsByType<CreatureFollower>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+
+        // map performce back to genetic data
+        foreach (CreatureFollower follower in followers)
         {
-            // default to tiny positive number to prevent neat math errors 
-            // from having a negative fitness score (walking left)
-            float performance = 0.001f;
-
-            if (creature.structure != null && creature.structure.joints.Count > 0)
+            if (follower.assignedGenome != null)
             {
-                GameObject firstJointObj = creature.structure.joints[0].jointObject;
+                // get displacement
+                float performance = follower.GetFinalFitness();
 
-                if (firstJointObj != null)
-                {
-                    CreatureBrain brain = firstJointObj.GetComponent<CreatureBrain>();
-                }
+                // this prevents negative fitness from breaking the NEAT sharing math.
+                follower.assignedGenome.fitness = Mathf.Max(0.001f, performance);
             }
         }
     }
+    
     public void AdjustFitness()
     {
         foreach (Specie s in species)
@@ -223,6 +223,7 @@ public class NEAT : MonoBehaviour {
                     // combine parent genomes into a new child genome.
                     Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
                     
+                    // mutation
                     childGenome.Mutate(globalInnovationTracker);
 
                     newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));

@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class CreatureBrain : MonoBehaviour
+public class CreatureFollower : MonoBehaviour
 {
     private NeuralNetwork network;
     private List<Muscle> muscles = new List<Muscle>();
@@ -47,11 +47,12 @@ public class CreatureBrain : MonoBehaviour
     }
 
     // fitness stuff
+    public Genome assignedGenome;
     private Vector3 startPosition;
     public float currentFitness;
-    void Start()
+    public void Init(Genome genome)
     {
-        // record where the creature spawned
+        assignedGenome = genome;
         startPosition = transform.position;
     }
 

@@ -55,7 +55,7 @@ public class SimulationManager : MonoBehaviour
 
         if (globalTimer <= 0)
         {
-            // advance the genetaion
+            AdvanceGeneration();
         }
     }
 
@@ -67,7 +67,33 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-    void AssembleCreature(Genome brainGenome)
+    void AdvanceGeneration()
+    {
+        // evaluate
+        neatSystem.EvaluateFitness();
+
+        // evolve
+        neatSystem.Speciate();
+        neatSystem.AdjustFitness();
+        neatSystem.Reproduce();
+
+        // clean up old gen's bodies
+        GameObject[] joints = GameObject.FindGameObjectsWithTag("Joint");
+        GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
+        foreach (GameObject j in joints) Destroy(j);
+        foreach (GameObject l in links) Destroy(l);
+
+        // spawn in new gen
+        SpawnPopulation();
+
+        // reset timer
+        globalTimer = generationTimeLimit;
+        
+        // increment generation number
+        Debug.Log($"Started Generation {neatSystem.generationNumber++}");
+    }
+
+    void AssembleCreature(Genome genome)
     {
         // list to hold brain refs
         List<Transform> spawnedJoints = new List<Transform>();
@@ -88,7 +114,7 @@ public class SimulationManager : MonoBehaviour
             loadedJoints.Add(jData.id, jObj);
             spawnedJoints.Add(jObj.transform); // add to list for brain
             
-            // set first joint as camera target
+            // set first joint as camera target, right now it only follows the very first creature spawned
             if (focusTarget == null) focusTarget = jObj.transform;
         }
 
@@ -102,12 +128,12 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
-        // attach the brain to the first joint
+        // attach the follower script (containing the brain) to the first joint
         GameObject firstJoint = loadedJoints[data.joints[0].id];
-        CreatureBrain brain = firstJoint.AddComponent<CreatureBrain>();
+        CreatureFollower follower = firstJoint.AddComponent<CreatureFollower>();
 
         // start the brain
-        brain.Init(brainGenome, spawnedMuscles, spawnedJoints);
+        follower.Init(genome, spawnedMuscles, spawnedJoints);
     }
 
     Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData)
