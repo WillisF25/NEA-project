@@ -1,15 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
-using JetBrains.Annotations;
-using UnityEditor.PackageManager.Requests;
-using Unity.VisualScripting;
 
 public class NEAT : MonoBehaviour {
     public int generationNumber;
     public int populationLimit;
     public List<Creature> population = new List<Creature>();
     public List<Specie> species = new List<Specie>();
-    public Innovation globalInnovationTracker;
 
     // NEAT parameters
     public float mutateWeightRate;
@@ -25,15 +21,97 @@ public class NEAT : MonoBehaviour {
     public float c2 = 1.0f; // disjoint
     public float c3 = 0.4f; // weight difference
     
-    private int nextSpecieID = 0;
+    // trackers
+    public Innovation globalInnovationTracker;
+    private int globalSpecieIDCounter = 0;
     private int globalCreatureIDCounter = 0;
+    private int globalGenomeIDCounter = 0;
 
     // code later
     public float FitnessFunction() { return 0f; }
     public void EvolvePopulaiton() {}
-    public void InitialisePopulation() {}
+
+    // called once to generate generation 0
+    public void InitialisePopulation(int jointCount, int muscleCount)
+    {
+        globalInnovationTracker = new Innovation();
+
+        population.Clear();
+
+        for (int i = 0; i < populationLimit; i++)
+        {
+            // create a starting genome (minial strucutre and random weights)
+            Genome startingGenome = CreateInitialGenome(jointCount, muscleCount); 
+
+            Creature newCreature = new Creature(globalCreatureIDCounter++, new Structure(), startingGenome);
+            population.Add(newCreature);
+        }
+
+        // initial speciation so every creature has a group from start
+        Speciate();
+    }
+
+    private Genome CreateInitialGenome(int jointCount, int muscleCount)
+    {
+        Genome g = new Genome(globalGenomeIDCounter++);
+        int nodeID = 0;
+
+        // create 1 input per joint and plus one for oscillator
+        int oscillatorIndex = 0;
+        int inputCount = 1 + jointCount;
+        for (int i = 0; i < inputCount; i++)
+            g.nodes.Add(new NodeGene(nodeID++, "INPUT", "Linear", 0));
+
+        // create 1 output per muscle
+        int firstOutputIndex = nodeID;
+        for (int i = 0; i < muscleCount; i++)
+            g.nodes.Add(new NodeGene(nodeID++, "OUTPUT", "Tanh", 0));
+
+        // connects the oscillator to every muscle
+        for (int i = 0; i < muscleCount; i++)
+        {
+            // connect node 0 (oscillator) to node (firstOutputIndex + i)
+            // randome weight between -1 and 1 for variety
+             float randomWeight = Random.Range(-1.0f, 1.0f);
+
+            int innovationID = globalInnovationTracker.GetInnovationID(
+            oscillatorIndex,
+            firstOutputIndex + i,
+            "AddConnection"
+            );
+
+             g.connections.Add(new ConnectionGene(
+                innovationID,
+                oscillatorIndex,
+                firstOutputIndex + i,
+                randomWeight,
+                true
+                ));
+          }
+
+        return g;
+    }
+        
     public void SimulateGeneration() {}
-    public void EvaluateFitness() {}
+    public void EvaluateFitness()
+    {
+        foreach (Creature creature in population)
+        {
+            // default to tiny positive number to prevent neat math errors 
+            // from having a negative fitness score (walking left)
+            float performance = 0.001f;
+
+            if (creature.structure != null && creature.structure.joints.Count > 0)
+            {
+                GameObject firstJointObj = creature.structure.joints[0].jointObject;
+
+                if (firstJointObj != null)
+                {
+                    CreatureBrain brain = firstJointObj.GetComponent<CreatureBrain>();
+                }
+            }
+        }
+    }
     public void AdjustFitness()
     {
         foreach (Specie s in species)
@@ -100,7 +178,7 @@ public class NEAT : MonoBehaviour {
             // if no compatible species, create new
             if (!foundSpecies)
             {
-                Specie newSpecie = new Specie(nextSpecieID++, creature);
+                Specie newSpecie = new Specie(globalSpecieIDCounter++, creature);
                 species.Add(newSpecie);
             }
 

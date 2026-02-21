@@ -45,4 +45,25 @@ public class CreatureBrain : MonoBehaviour
             }
         }
     }
+
+    // fitness stuff
+    private Vector3 startPosition;
+    public float currentFitness;
+    void Start()
+    {
+        // record where the creature spawned
+        startPosition = transform.position;
+    }
+
+    void Update()
+    {   
+        // distance travelled on the x axis
+        currentFitness = transform.position.x - startPosition.x;
+    }
+
+    public float GetFinalFitness()
+    {   
+        // return the fitness score at the end of the generation
+        return currentFitness;
+    }
 }

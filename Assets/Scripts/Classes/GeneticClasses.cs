@@ -80,7 +80,7 @@ public class Genome {
             if (ConnectionExists(source.innovationID, target.innovationID)) continue;
 
             // create the connection
-            int id = innovation.GetInnovationNumber(source.innovationID, target.innovationID, "AddConnection");
+            int id = innovation.GetInnovationID(source.innovationID, target.innovationID, "AddConnection");
             connections.Add(new ConnectionGene(id, source.innovationID, target.innovationID, UnityEngine.Random.Range(-1f, 1f), true));
             return;
         }
@@ -113,11 +113,11 @@ public class Genome {
         nodes.Add(newNode);
 
         // link 1: source to newnode (weight = 1)
-        int link1_ID = innovation.GetInnovationNumber(connToSplit.inputNode, newNodeID, "AddConnection");
+        int link1_ID = innovation.GetInnovationID(connToSplit.inputNode, newNodeID, "AddConnection");
         ConnectionGene link1 = new ConnectionGene(link1_ID, connToSplit.inputNode, newNodeID, 1.0f, true);
 
         // link2: newnode to target (weight = old weight)
-        int link2_ID = innovation.GetInnovationNumber(newNodeID, connToSplit.outputNode, "AddConnection");
+        int link2_ID = innovation.GetInnovationID(newNodeID, connToSplit.outputNode, "AddConnection");
         ConnectionGene link2 = new ConnectionGene(link2_ID, newNodeID, connToSplit.outputNode, connToSplit.weight, true);
 
         connections.Add(link1);

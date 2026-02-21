@@ -11,10 +11,10 @@ public class SimulationManager : MonoBehaviour
 
     void Start()
     {
-        AssembleCreature();
+        //AssembleCreature();
     }
 
-    void AssembleCreature()
+    void AssembleCreature(Genome brainGenome)
     {
         // get data
         CreatureData data = SaveLoadManager.LoadCreatureStructure("creature.json");
@@ -53,50 +53,12 @@ public class SimulationManager : MonoBehaviour
             }
         }
 
-        // attach the brain
-        CreatureBrain brain = gameObject.AddComponent<CreatureBrain>();
-
-        // dummy Genome for testing
-        Genome testGenome = CreateTestGenome(spawnedJoints.Count, spawnedMuscles.Count);
+        // attach the brain to the first joint
+        GameObject firstJoint = loadedJoints[data.joints[0].id];
+        CreatureBrain brain = firstJoint.AddComponent<CreatureBrain>();
 
         // start the brain
-        brain.Init(testGenome, spawnedMuscles, spawnedJoints);
-    }
-
-    Genome CreateTestGenome(int jointCount, int muscleCount)
-    {
-        Genome g = new Genome(0);
-        int innovation = 0;
-
-        // create 1 input per joint and plus one for oscillator
-        int oscillatorIndex = 0;
-        int inputCount = 1 + jointCount;
-        for (int i = 0; i < inputCount; i++)
-            g.nodes.Add(new NodeGene(innovation++, "INPUT", "Linear", 0));
-
-        // create 1 output per muscle
-        int firstOutputIndex = innovation;
-        for (int i = 0; i < muscleCount; i++)
-            g.nodes.Add(new NodeGene(innovation++, "OUTPUT", "Tanh", 0));
-
-        // connects the oscillator to every muscle
-        int connectionInnovation = 0;
-        for (int i = 0; i < muscleCount; i++)
-        {
-            // connect node 0 (oscillator) to node (firstOutputIndex + i)
-            // randome weight between -1 and 1 for variety
-            float randomWeight = Random.Range(-1.0f, 1.0f);
-
-            g.connections.Add(new ConnectionGene(
-                connectionInnovation++,
-                oscillatorIndex,
-                firstOutputIndex + i,
-                randomWeight,
-                true
-            ));
-        }
-
-        return g;
+        brain.Init(brainGenome, spawnedMuscles, spawnedJoints);
     }
 
     Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData)

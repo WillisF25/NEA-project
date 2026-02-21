@@ -4,16 +4,16 @@ using System.IO;
 
 public class Innovation {
     // increments when a unique mutation occurs
-    public int innovationTracker = 0;
+    private int innovationTracker = 0;
     
     // key: InnovationID
     // value: [string mutationType, int nodeInID, int nodeOutID]
     // or for nodes: [string mutationType, int oldConnectionID]
-    public Dictionary<int, List<object>> innovationRecords = new Dictionary<int, List<object>>();
+    private Dictionary<int, List<object>> innovationRecords = new Dictionary<int, List<object>>();
 
-    // checks if this mutation has happend before this gen
+    // checks if this mutation has occured before
     // returns the existing id if found, or new id if not
-    public int GetInnovationNumber(int nodeInID, int nodeOutID, string mutationType) 
+    public int GetInnovationID(int nodeInID, int nodeOutID, string mutationType) 
     {
         // loop through existing records
         foreach (var record in innovationRecords)
@@ -35,7 +35,7 @@ public class Innovation {
         List<object> newRecord = new List<object> { mutationType, nodeInID, nodeOutID };
         innovationRecords.Add(newID, newRecord);
 
-        // increment global tracker for next unique muataion
+        // increment global tracker for next unique mutation
         innovationTracker++;
 
         return newID;
@@ -58,9 +58,6 @@ public class Innovation {
         innovationTracker++;
         return newID;
     }
-
-    public void SetNewConnection(NodeGene inputNode, NodeGene outputNode) {}
-    public void SetNewNode(ConnectionGene splittedConnection) {}
 }
 
 public class SaveLoadManager {
