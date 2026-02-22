@@ -248,7 +248,6 @@ public class Genome {
         // formula from neat paper
         return (c1 * excess / n) + (c2 * disjoint / n) + (c3 * avgWeightDiff);
     }
-    public void SortTopology() {}
 
     public Genome Clone()
     {

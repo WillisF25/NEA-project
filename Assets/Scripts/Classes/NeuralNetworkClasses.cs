@@ -51,11 +51,9 @@ public class NeuralNetwork {
             }
         }
 
-        outputBuffer = new float[outputNodes.Count];
+        SortTopology();
 
-        // simple sort for now
-        // input to hiddne to output
-        nodes.Sort((a, b) => a.NodeType.CompareTo(b.NodeType));
+        outputBuffer = new float[outputNodes.Count];
     }
 
     public float[] ForwardPass(float[] inputs) 
@@ -91,6 +89,60 @@ public class NeuralNetwork {
 
         return outputBuffer;
     }
+
+    public void SortTopology()
+    {
+        // reset depths
+        foreach (var node in nodes)
+        {
+            if (node.NodeType == "INPUT") node.Depth = 0;
+            else node.Depth = -1; // uncalculated depth
+        }
+
+        // assign depths to Hidden and Output nodes
+        bool changed = true;
+        int safetyIterator = 0;
+
+        // loop unitl no more depths change or hit a safety limit (circular refs)
+        while (changed && safetyIterator < nodes.Count)
+        {
+            changed = false;
+            foreach(var node in nodes)
+            {
+                if(node.NodeType == "INPUT") continue;
+
+                float maxParentDepth = -1;
+                foreach (var conn in node.IncomingConnections)
+                {
+                    if (conn.Enabled && conn.InputNode.Depth != -1)
+                    {
+                        maxParentDepth = MathF.Max(maxParentDepth, conn.InputNode.Depth);
+                    }
+                }
+
+                // if found vaild parent, this node's depth is parent+1
+                if (maxParentDepth != -1)
+                {
+                    float newDepth = maxParentDepth + 1;
+                    if (node.Depth != newDepth)
+                    {
+                        node.Depth = newDepth;
+                        changed = true;
+                    }
+                }
+            }
+            safetyIterator++;
+        }
+
+        // force Output nodes to be last thing to be calculated
+        foreach (var node in outputNodes)
+        {
+            node.Depth = 1000; // arbitrary high number
+        }
+
+        // sort the list based on the depths
+        nodes.Sort((a, b) => a.Depth.CompareTo(b.Depth));
+    }
 }
 
 // Phenotype components
@@ -99,11 +151,14 @@ public class Node {
     private string nodeType;
     private float bias;
     
-    public delegate float ActivationFunction(float x);
-    private ActivationFunction activationFunctionPtr;
+    // 0 for input, 1 or ouput, something in between for hidden
+    public float Depth;
     
     private float inputSum;
     private float output;
+
+    public delegate float ActivationFunction(float x);
+    private ActivationFunction activationFunctionPtr;
 
     // getters
     public int NodeID => nodeID;
