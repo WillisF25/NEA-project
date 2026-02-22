@@ -146,36 +146,52 @@ public class SimulationManager : MonoBehaviour
 
     Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData)
     {
-        // physics setup
-        DistanceJoint2D physicalLink = a.AddComponent<DistanceJoint2D>();
-        physicalLink.connectedBody = b.GetComponent<Rigidbody2D>();
-        physicalLink.distance = lData.length;
-
         // visuals 
         GameObject linkVisual = Instantiate(linkPrefab);
         linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
         LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
 
         if (lData.type == "Muscle")
-        {
+        {   
+            // muscle visuals
             lr.startColor = Color.red;
             lr.endColor = Color.red;
 
             // add muscle script
             Muscle m = a.AddComponent<Muscle>();
-            m.joint = physicalLink;
+            m.rbA = a.GetComponent<Rigidbody2D>();
+            m.rbB = b.GetComponent<Rigidbody2D>();
+
+            // use saved length form json
             m.minLength = lData.length * 0.5f;
             m.maxLength = lData.length * 1.5f;
+            m.springForce = 100f; // muscle strength
+            m.damping = 10f; // stop jitter
 
-            return m; // return muscle component
+            return m; // return muscle so it can be added to nn controller list
         }
-        else
+        else // bone
         {
+            // bone visuals
             lr.startColor = Color.white;
             lr.endColor = Color.white;
-        }
 
-        return null; // return null if its bone
+            // add DistanceJoint2D
+            DistanceJoint2D physicalLink = a.AddComponent<DistanceJoint2D>();
+            physicalLink.connectedBody = b.GetComponent<Rigidbody2D>();
+
+            // ensure the bone is rigid and matches the saved blueprint
+            physicalLink.autoConfigureDistance = false;
+            physicalLink.distance = lData.length;
+            physicalLink.maxDistanceOnly = false;
+            physicalLink.autoConfigureConnectedAnchor = false;
+
+            // set anchors to center to prevent weird offsets
+            physicalLink.anchor = Vector2.zero;
+            physicalLink.connectedAnchor = Vector2.zero;
+
+            return null; // bones are not controlled by nn
+        }
     }
 
         public void BackToBuilder()

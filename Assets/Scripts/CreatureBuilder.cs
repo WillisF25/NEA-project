@@ -113,53 +113,56 @@ void SpawnJoint(Vector2 pos)
         Joint dataA = a.GetComponent<JointIdentity>().jointData;
         Joint dataB = b.GetComponent<JointIdentity>().jointData;
 
-        // create link data
+        // create and record link data
         int newID = currentStructure.links.Count;
         Link newLinkData = new Link(newID, dataA, dataB, currentLinkType);
         currentStructure.links.Add(newLinkData);
         
-        // physcis setup
-        DistanceJoint2D physicalLink = a.AddComponent<DistanceJoint2D>();
-        physicalLink.connectedBody = b.GetComponent<Rigidbody2D>();
-        physicalLink.distance = newLinkData.length;
-        
-        // set the distance to length calced in Link
-        physicalLink.distance = newLinkData.length;
+        // setup visuals
+        GameObject linkVisual = Instantiate(linkPrefab);
+        linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
+        LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
 
-        // visulas and components
-        if (linkPrefab != null)
+        LinkIdentity linkID = linkVisual.GetComponent<LinkIdentity>() ?? linkVisual.AddComponent<LinkIdentity>();
+        linkID.id = newID;
+        linkID.sourceID = dataA.id;
+        linkID.targetID = dataB.id;
+        linkID.type = currentLinkType.ToString();
+        linkID.length = newLinkData.length;
+
+        // physics setup
+        if (currentLinkType == LinkType.Muscle)
         {
-            GameObject linkVisual = Instantiate(linkPrefab);
-            linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
-            LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
+            lr.startColor = Color.red;
+            lr.endColor = Color.red;
 
-            LinkIdentity linkID = linkVisual.GetComponent<LinkIdentity>();
-            if (linkID == null) linkID = linkVisual.AddComponent<LinkIdentity>();
+            // add the Muscle script
+            Muscle m = a.AddComponent<Muscle>();
+            m.rbA = a.GetComponent<Rigidbody2D>();
+            m.rbB = b.GetComponent<Rigidbody2D>();
+            
+            // define expansion limits based on initial drawn length
+            m.minLength = newLinkData.length * 0.5f;
+            m.maxLength = newLinkData.length * 1.5f;
+            m.springForce = 60f; // adjust based on mass
+            m.damping = 5f;
+        }
+        else // bone
+        {
+            lr.startColor = Color.white;
+            lr.endColor = Color.white;
 
-            linkID.id = newID;
-            linkID.sourceID = a.GetComponent<JointIdentity>().id; 
-            linkID.targetID = b.GetComponent<JointIdentity>().id;
-            linkID.type = currentLinkType.ToString();
-            linkID.length = newLinkData.length;
+            DistanceJoint2D physicalLink = a.AddComponent<DistanceJoint2D>();
+            physicalLink.connectedBody = b.GetComponent<Rigidbody2D>();
 
-            if (currentLinkType == LinkType.Muscle)
-            {
-                // set muscle visual
-                lr.startColor = Color.red;
-                lr.endColor = Color.red;
-
-                // add muscle script
-                Muscle m = a.AddComponent<Muscle>();
-                m.joint = physicalLink;
-            }
-            else
-            {
-                // set bone visuals
-                lr.startColor = Color.white;
-                lr.endColor = Color.white;
-            }
+            // hard set length
+            physicalLink.autoConfigureDistance = false;
+            physicalLink.distance = newLinkData.length;
+            physicalLink.maxDistanceOnly = false;
+            physicalLink.autoConfigureConnectedAnchor = false;
         }
 
+        // reste ui selection
         a.GetComponent<SpriteRenderer>().color = Color.white;
         selectedJointA = null;
     }
