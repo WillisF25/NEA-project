@@ -16,11 +16,11 @@ public class NEAT {
     public float crossoverRate;
     public float mutateWeightStep;
     public string trainingGoal;
-    public float compatibilityThreshold = 4.0f;
+    public float compatibilityThreshold;
     // coefficients from the NEAT paper
-    public float c1 = 1.0f; // excess
-    public float c2 = 1.0f; // disjoint
-    public float c3 = 0.4f; // weight difference
+    public float c1; // excess
+    public float c2; // disjoint
+    public float c3; // weight difference
     
     // trackers
     public Innovation globalInnovationTracker;
@@ -208,7 +208,7 @@ public class NEAT {
             foreach (Creature c in population)
             {
                 Genome mutant = c.genome.Clone();
-                mutant.Mutate(globalInnovationTracker);
+                mutant.Mutate(globalInnovationTracker, this);
                 newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), mutant));            
             }
             population = newPopulation;
@@ -246,7 +246,7 @@ public class NEAT {
                     Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
                     
                     // mutation
-                    childGenome.Mutate(globalInnovationTracker);
+                    childGenome.Mutate(globalInnovationTracker, this);
 
                     newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
                 }
@@ -266,7 +266,7 @@ public class NEAT {
             {
                 Creature[] parents = bestSpecie.SelectParents();
                 Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
-                childGenome.Mutate(globalInnovationTracker);
+                childGenome.Mutate(globalInnovationTracker, this);
                 newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
             }
         }
@@ -313,7 +313,7 @@ public class Specie {
         // assume members list is already sorted by fitness (highest to lowest)
 
         // truncation: conly consider top 50%
-        int eligibleCount = Mathf.Max(1, members.Count / 2);
+        int eligibleCount = Mathf.Max(1, Mathf.CeilToInt(members.Count / 2f));
         Creature[] parents = new Creature[2];
 
         for (int i = 0; i < 2; i++)

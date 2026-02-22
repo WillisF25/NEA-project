@@ -14,23 +14,22 @@ public class Genome {
         this.genomeID = genomeID;
     }
 
-    // default values for now
-    public void Mutate(Innovation innovation)
+    public void Mutate(Innovation innovation, NEAT settings)
     {
         // mutate weights
-        if (UnityEngine.Random.value < 0.8f) 
+        if (UnityEngine.Random.value < settings.mutateWeightRate) 
         {
             MutateWeights();
         }
 
         // add Connection 
-        if (UnityEngine.Random.value < 0.05f) 
+        if (UnityEngine.Random.value < settings.addConnectionRate) 
         {
             AddConnection(innovation);
         }
 
         // add Node
-        if (UnityEngine.Random.value < 0.01f) 
+        if (UnityEngine.Random.value < settings.addNodeRate) 
         {
             AddNode(innovation);
         }

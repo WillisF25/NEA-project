@@ -9,7 +9,6 @@ public class SimulationManager : MonoBehaviour
 
     // NEAT variables
     public NEAT neatSystem;
-    public int populationSize;
     public float generationTimeLimit;
     private float globalTimer;
     public TextMeshProUGUI timerDisplay;
@@ -38,9 +37,6 @@ public class SimulationManager : MonoBehaviour
         }
 
         // initialise NEAT
-        neatSystem = new NEAT();
-        neatSystem.populationLimit = populationSize;
-        neatSystem.trainingGoal = "Walk Right";
         neatSystem.generationNumber = 0;
 
         // initialise gen 0

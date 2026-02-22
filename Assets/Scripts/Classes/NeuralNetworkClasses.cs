@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class NeuralNetwork {
     private List<Node> nodes = new List<Node>();
@@ -18,6 +19,13 @@ public class NeuralNetwork {
         // instantiate the neurons
         foreach (NodeGene gene in genome.nodes)
         {
+            // Check if the node is already in the map to prevent crashes
+            if (nodeMap.ContainsKey(gene.innovationID)) 
+            {
+                Debug.LogWarning($"Duplicate Node ID {gene.innovationID} found in Genome {genome.genomeID}. Skipping.");
+                continue; 
+            }
+
             // create the Node form blueprint
             Node newNode = new Node(gene);
             nodes.Add(newNode);
