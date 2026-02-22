@@ -6,6 +6,10 @@ public class CreatureFollower : MonoBehaviour
     private NeuralNetwork network;
     private List<Muscle> muscles = new List<Muscle>();
     private List<Transform> joints = new List<Transform>();
+
+    // pre allocated buffers
+    private float[] inputs;
+    private float[] outputs;
     
     // fitness stuff
     public Genome assignedGenome;
@@ -19,31 +23,31 @@ public class CreatureFollower : MonoBehaviour
         joints = creatureJoints;
         assignedGenome = genome;
         startPosition = transform.position;
+
+        // init buffer
+        inputs = new float[1 + joints.Count]; // oscillator + joint heights
     }
 
     void FixedUpdate() // FixedUpdate for physcis consistency
     {
         if (network == null) return;
 
-        // gather inputs
-        List<float> inputs = new List<float>();
-
         // input A, Oscillator
         // helps with rhythimc movement
-        inputs.Add(Mathf.Sin(Time.time * 2f));
+        inputs[0] = Mathf.Sin(Time.time * 2f);
 
         // input B, joint posisiton (height)
         // helps the creature know where it is relative to the ground
-        foreach (var joint in joints)
+        for(int i = 0; i < joints.Count; i++) 
         {
-            inputs.Add(joint.localPosition.y); 
+            inputs[1 + i] = joints[i].localPosition.y;
         }
 
         // process through the neural network
-        List<float> outputs = network.ForwardPass(inputs);
+        outputs = network.ForwardPass(inputs);
 
         // apply ouputs to Muscles
-        if (outputs != null && outputs.Count == muscles.Count)
+        if (outputs != null && outputs.Length == muscles.Count)
         {
             for (int i = 0; i < muscles.Count; i++)
             {

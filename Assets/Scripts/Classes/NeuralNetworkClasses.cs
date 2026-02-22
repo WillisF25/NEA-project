@@ -3,11 +3,12 @@ using System.Collections.Generic;
 
 public class NeuralNetwork {
     private List<Node> nodes = new List<Node>();
-    private List<Connection> connections = new List<Connection>();
-
-    // list for fast access in ForwardPass
     private List<Node> inputNodes = new List<Node>();
     private List<Node> outputNodes = new List<Node>();
+    //private List<Connection> connections = new List<Connection>();
+
+    // reusable output buffer
+    private float[] outputBuffer;
 
     public NeuralNetwork(Genome genome) {
         // CREATE NODES
@@ -49,15 +50,21 @@ public class NeuralNetwork {
 
             }
         }
+
+        outputBuffer = new float[outputNodes.Count];
+
+        // simple sort for now
+        // input to hiddne to output
+        nodes.Sort((a, b) => a.NodeType.CompareTo(b.NodeType));
     }
 
-    public List<float> ForwardPass(List<float> inputs) 
+    public float[] ForwardPass(float[] inputs) 
     { 
         // ensure num of sensors on the creature matches with num of input neurons
-        if (inputs.Count != inputNodes.Count)
+        if (inputs.Length != inputNodes.Count)
         {   
             // if mismatch
-            return new List<float>();
+            return null;
         }
 
         // inject the inputs
@@ -77,13 +84,12 @@ public class NeuralNetwork {
         }
 
         // get outputs
-        List<float> outputs = new List<float>();
-        foreach (Node node in outputNodes)
+        for (int i = 0; i < outputNodes.Count; i++)
         {
-            outputs.Add(node.Output);
+            outputBuffer[i] = outputNodes[i].Output;
         }
 
-        return outputs;
+        return outputBuffer;
     }
 }
 
