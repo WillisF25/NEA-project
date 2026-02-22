@@ -151,9 +151,6 @@ void SpawnJoint(Vector2 pos)
                 // add muscle script
                 Muscle m = a.AddComponent<Muscle>();
                 m.joint = physicalLink;
-                m.minLength = physicalLink.distance * 0.7f; // default to 70% of original
-                m.maxLength = physicalLink.distance * 1.3f; // default to 130% of original
-                m.strength = 5.0f;
             }
             else
             {

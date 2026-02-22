@@ -264,7 +264,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 21675368}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9e86f3658a5a5b04fad2610b58fefce1, type: 3}
   m_Name: 
@@ -723,7 +723,7 @@ MonoBehaviour:
   linkPrefab: {fileID: 6310412958984888033, guid: 4d1d3aa97eb937a47a281dd3bce6ee22, type: 3}
   neatSystem:
     generationNumber: 0
-    populationLimit: 0
+    populationLimit: 1
     population: []
     mutateWeightRate: 0
     addNodeRate: 0
@@ -736,8 +736,8 @@ MonoBehaviour:
     c1: 1
     c2: 1
     c3: 0.4
-  populationSize: 1
-  generationTimeLimit: 5
+  populationSize: 2
+  generationTimeLimit: 10
 --- !u!4 &1468973730
 Transform:
   m_ObjectHideFlags: 0
@@ -943,13 +943,13 @@ BoxCollider2D:
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 2.048, y: 2.048}
-    newSize: {x: 1, y: 0.1}
+    oldSize: {x: 20.48, y: 20.48}
+    newSize: {x: 100, y: 1}
     adaptiveTilingThreshold: 0.5
     drawMode: 2
     adaptiveTiling: 0
-  m_AutoTiling: 1
-  m_Size: {x: 1, y: 1}
+  m_AutoTiling: 0
+  m_Size: {x: 100, y: 1}
   m_EdgeRadius: 0
 --- !u!212 &2066712472
 SpriteRenderer:
@@ -1005,7 +1005,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 2
-  m_Size: {x: 1, y: 0.1}
+  m_Size: {x: 100, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -1020,7 +1020,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -8, z: 0}
-  m_LocalScale: {x: 100, y: 10, z: 1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}

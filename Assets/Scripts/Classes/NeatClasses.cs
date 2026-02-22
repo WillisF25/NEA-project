@@ -16,7 +16,7 @@ public class NEAT {
     public float crossoverRate;
     public float mutateWeightStep;
     public string trainingGoal;
-    public float compatibilityThreshold;
+    public float compatibilityThreshold = 4.0f;
     // coefficients from the NEAT paper
     public float c1 = 1.0f; // excess
     public float c2 = 1.0f; // disjoint
@@ -27,10 +27,6 @@ public class NEAT {
     private int globalSpecieIDCounter = 0;
     private int globalCreatureIDCounter = 0;
     private int globalGenomeIDCounter = 0;
-
-    // code later
-    public float FitnessFunction() { return 0f; }
-    public void EvolvePopulaiton() {}
 
     // called once to generate generation 0
     public void InitialisePopulation(int jointCount, int muscleCount)
@@ -145,6 +141,7 @@ public class NEAT {
                 s.totalFitness += ci.genome.fitness;
 
             }
+            Debug.Log($"Total fitness for specie {s.specieID}: {s.totalFitness}");
         }
     }
 
@@ -163,9 +160,10 @@ public class NEAT {
 
             // compare creature to each exising species representative
             foreach (Specie s in species)
-            {
-                // compat dist formula
-                if (creature.genome.GetCompatibilityDistance(s.representative.genome, c1, c2, c3) < compatibilityThreshold)
+            {   
+                // ends of species lost its representative
+                // and compat dist formula
+                if (s.representative != null && creature.genome.GetCompatibilityDistance(s.representative.genome, c1, c2, c3) < compatibilityThreshold)
                 {
                     s.members.Add(creature);
                     foundSpecies = true;
@@ -183,31 +181,57 @@ public class NEAT {
             // remove any species with 0 creature
             species.RemoveAll(s => s.members.Count == 0);
 
+            // update representatives for next gen
+            foreach (Specie s in species)
+            {
+                if (s.members.Count >0) s.representative = s.members[0];
+            }
         }
     }
 
     public void Reproduce()
     {
         List<Creature> newPopulation = new List<Creature>();
-
+        
+        // calc global fitness
         float globalTotalFitness = 0;
         foreach (Specie s in species) 
         {
             globalTotalFitness += s.totalFitness;
         }
 
+        // handle gen 0 / zero fitness edge case
+        if (globalTotalFitness <= 0.001f) // basically if every creature failed
+        {
+            Debug.LogWarning("Global fitness was 0. Creating a completely random new generation.");    
+            // mutate existing ones heavilty to force something new
+            foreach (Creature c in population)
+            {
+                Genome mutant = c.genome.Clone();
+                mutant.Mutate(globalInnovationTracker);
+                newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), mutant));            
+            }
+            population = newPopulation;
+            return; // exit early
+        }
+
+
+        // normal reproduction
         // generate each specie's allotted offspring
         foreach (Specie s in species)
         {   
-            // sort to ensure the elite is at index 0 and tournament seleciton is fast
-            s.members.Sort((a, b) => b.genome.fitness.CompareTo(a.genome.fitness));
+            // ensure species has members
+            if (s.members.Count == 0) continue;
 
-            // determine how many slots this speceis gets in the next gen
+            // sort to ensure the elite is at index 0 and tournament seleciton is fast
+            s.members.Sort((a, b) => b.genome.fitness.CompareTo(a.genome.fitness)); // highest first
+
+            // determine how many slots this species gets in the next gen
             int offspringCount = s.DetermineOffspringCount(globalTotalFitness, populationLimit);
 
             if (offspringCount > 0)
             {
-                // elitism: best member of the speceis survivies unchanged
+                // elitism: best member of the species survivies unchanged
                 Genome eliteBrain = s.members[0].genome.Clone(); // clone to ensure unique brain instance
 
                 // instantiate the elite a fresh instance and a unique Global ID
@@ -230,18 +254,21 @@ public class NEAT {
         }
 
         // handle rounding deficits, as FloorToInt rounds down
-        // fill the remaining slot by breeding from top performing species
-        while (newPopulation.Count < populationLimit)
-        {
-            // sort species by total fitness to find the fittest species
-            species.Sort((a, b) => b.totalFitness.CompareTo(a.totalFitness));
-            Specie bestSpecie = species[0];
-            
-            Creature[] parents = bestSpecie.SelectParents();
-            Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
-            childGenome.Mutate(globalInnovationTracker);
-            
-            newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
+        // rule out species with no members
+        List<Specie> activeSpecies = species.FindAll(s => s.members.Count > 0);
+        if (activeSpecies.Count > 0)
+        {   
+            // fill the remaining slots by breeding from best specie
+            activeSpecies.Sort((a, b) => b.totalFitness.CompareTo(a.totalFitness));
+            Specie bestSpecie = activeSpecies[0];
+
+            while (newPopulation.Count < populationLimit)
+            {
+                Creature[] parents = bestSpecie.SelectParents();
+                Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
+                childGenome.Mutate(globalInnovationTracker);
+                newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
+            }
         }
 
         // overwrite old gen with new gen
@@ -249,6 +276,7 @@ public class NEAT {
     }
 }
 
+[System.Serializable]
 public class Specie {
     public int specieID;
     public List<Creature> members = new List<Creature>();

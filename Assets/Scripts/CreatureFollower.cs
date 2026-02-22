@@ -6,13 +6,19 @@ public class CreatureFollower : MonoBehaviour
     private NeuralNetwork network;
     private List<Muscle> muscles = new List<Muscle>();
     private List<Transform> joints = new List<Transform>();
+    
+    // fitness stuff
+    public Genome assignedGenome;
+    private Vector3 startPosition;
+    public float currentFitness;
 
-    // init the brain with a genome
     public void Init(Genome genome, List<Muscle> creatureMuscles, List<Transform> creatureJoints)
     {
-        this.network = new NeuralNetwork(genome);
-        this.muscles = creatureMuscles;
-        this.joints = creatureJoints;
+        network = new NeuralNetwork(genome);
+        muscles = creatureMuscles;
+        joints = creatureJoints;
+        assignedGenome = genome;
+        startPosition = transform.position;
     }
 
     void FixedUpdate() // FixedUpdate for physcis consistency
@@ -44,16 +50,6 @@ public class CreatureFollower : MonoBehaviour
                 muscles[i].SetMuscleExtension(outputs[i]);
             }
         }
-    }
-
-    // fitness stuff
-    public Genome assignedGenome;
-    private Vector3 startPosition;
-    public float currentFitness;
-    public void Init(Genome genome)
-    {
-        assignedGenome = genome;
-        startPosition = transform.position;
     }
 
     void Update()

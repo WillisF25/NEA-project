@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using TMPro;
 
 public class SimulationManager : MonoBehaviour
 {
@@ -8,9 +9,10 @@ public class SimulationManager : MonoBehaviour
 
     // NEAT variables
     public NEAT neatSystem;
-    public int populationSize = 50; // default for now
-    public float generationTimeLimit = 15f;
+    public int populationSize;
+    public float generationTimeLimit;
     private float globalTimer;
+    public TextMeshProUGUI timerDisplay;
 
     private CreatureData data;
     
@@ -59,6 +61,8 @@ public class SimulationManager : MonoBehaviour
         {
             AdvanceGeneration();
         }
+
+        UpdateTimerUI();
     }
 
     void SpawnPopulation()
@@ -160,8 +164,8 @@ public class SimulationManager : MonoBehaviour
             // add muscle script
             Muscle m = a.AddComponent<Muscle>();
             m.joint = physicalLink;
-            m.minLength = lData.length * 0.7f;
-            m.maxLength = lData.length * 1.3f;
+            m.minLength = lData.length * 0.5f;
+            m.maxLength = lData.length * 1.5f;
 
             return m; // return muscle component
         }
@@ -179,4 +183,17 @@ public class SimulationManager : MonoBehaviour
             // load builder scene
             UnityEngine.SceneManagement.SceneManager.LoadScene("CreatureBuilder");
         }
+
+    // timer ui
+    void UpdateTimerUI()
+    {
+        // formatting: "00:00"
+        float minutes = Mathf.FloorToInt(globalTimer / 60);
+        float seconds = Mathf.FloorToInt(globalTimer % 60);
+        
+        // ensure the timer doesn't display negative numbers visually
+        float displayTime = Mathf.Max(0, globalTimer);
+        
+        timerDisplay.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+    }
 }

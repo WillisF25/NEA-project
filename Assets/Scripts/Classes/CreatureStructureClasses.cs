@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 
 [Serializable]
 public class Structure
@@ -68,9 +67,5 @@ public class Link
     public float CurrentLength() 
     { 
         return Vector3.Distance(jointA.position, jointB.position); 
-    }
-    public void ApplyMuscleForce()
-    {
-        // later code
     }
 }
