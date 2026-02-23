@@ -51,10 +51,3 @@ public class SaveLoadManager {
     public NEAT LoadSimulationState(NEAT neatInstance, string name) {return null;}
     public void AutoSave(NEAT neatInstance) {}
 }
-
-public class CreatureValidator {
-    // code later
-    public bool ValidateStructure(Structure structure) {return true;}
-    public bool CheckCollision(Structure structure) {return true;}
-    public bool CheckTopology(Structure structure) {return true;}
-}
