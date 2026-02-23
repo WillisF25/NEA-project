@@ -140,7 +140,6 @@ public class NEAT {
                 s.totalFitness += gi.fitness;
 
             }
-            Debug.Log($"Total fitness for specie {s.specieID}: {s.totalFitness}");
         }
     }
 
