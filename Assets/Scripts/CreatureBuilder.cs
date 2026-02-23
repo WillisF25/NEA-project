@@ -108,6 +108,29 @@ public class CreatureBuilder : MonoBehaviour
 
         Joint jointA = jointMap[a];
         Joint jointB = jointMap[b];
+        
+        // check if link exist already
+        Link existingLink = currentStructure.links.Find(l => 
+            (l.jointA == jointA && l.jointB == jointB) || (l.jointA == jointB && l.jointB == jointA));
+
+        if (existingLink != null)
+        {
+            // if same type, ignore
+            if (existingLink.type == currentLinkType)
+            {
+                Debug.Log("Link already exists. Ignoring.");
+                // reset ui selection and stop
+                a.GetComponent<SpriteRenderer>().color = Color.white;
+                selectedJointA = null;
+                return;
+            }
+
+            // if different type, override
+            Debug.Log($"Replacing {existingLink.type} with {currentLinkType}");
+            RemoveLink(a, b, existingLink);
+            currentStructure.links.Remove(existingLink);
+            // continue to rest of func to create new one
+        }
 
         // create and record link data
         int newID = currentStructure.links.Count;
@@ -158,6 +181,41 @@ public class CreatureBuilder : MonoBehaviour
         // reste ui selection
         a.GetComponent<SpriteRenderer>().color = Color.white;
         selectedJointA = null;
+    }
+    void RemoveLink(GameObject a, GameObject b, Link link)
+    {
+        // find and destroy the the visual gameobj
+        LinkFollower[] allVisuals = FindObjectsByType<LinkFollower>(FindObjectsSortMode.None);
+        foreach (var vis in allVisuals)
+        {
+            if ((vis.startObj == a.transform && vis.endObj == b.transform) ||
+                (vis.startObj == b.transform && vis.endObj == a.transform))
+            {
+                Destroy(vis.gameObject);
+                break;
+            }
+        }
+
+        // 2. remoce the physics components from 'a'
+        // if it was Bone
+        DistanceJoint2D[] dJoints = a.GetComponents<DistanceJoint2D>();
+        foreach (var dj in dJoints)
+        {
+            if (dj.connectedBody == b.GetComponent<Rigidbody2D>())
+            {
+                Destroy(dj);
+            }
+        }
+
+        // if it was Muscle
+        Muscle[] muscles = a.GetComponents<Muscle>();
+        foreach (var m in muscles)
+        {
+            if (m.rbB == b.GetComponent<Rigidbody2D>())
+            {
+                Destroy(m);
+            }
+        }
     }
 
     public void ClearAll()
