@@ -1,8 +1,7 @@
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 
-[Serializable]
+[System.Serializable]
 public class Genome {
     public int genomeID;
     public List<ConnectionGene> connections = new List<ConnectionGene>();
@@ -271,7 +270,7 @@ public class Genome {
     }
 }
 
-[Serializable]
+[System.Serializable]
 public class NodeGene {
     public int innovationID;
     public string nodeType;
@@ -287,7 +286,7 @@ public class NodeGene {
     }
 }
 
-[Serializable]
+[System.Serializable]
 public class ConnectionGene {
     public int innovationID;
     public int inputNode;

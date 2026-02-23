@@ -66,9 +66,9 @@ public class SimulationManager : MonoBehaviour
 
     void SpawnPopulation()
     {
-        foreach (Creature c in neatSystem.population)
+        foreach (Genome g in neatSystem.population)
         {
-            AssembleCreature(c.genome);
+            AssembleCreature(g);
         }
 
         activeCreatures = FindObjectsByType<CreatureFollower>(FindObjectsSortMode.None);

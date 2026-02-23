@@ -5,7 +5,7 @@ using System.Collections.Generic;
 public class NEAT {
     public int generationNumber;
     public int populationLimit;
-    public List<Creature> population = new List<Creature>();
+    public List<Genome> population = new List<Genome>();
     public List<Specie> species = new List<Specie>();
 
     // NEAT parameters
@@ -40,8 +40,8 @@ public class NEAT {
             // create a starting genome (minial strucutre and random weights)
             Genome startingGenome = CreateInitialGenome(jointCount, muscleCount); 
 
-            Creature newCreature = new Creature(globalCreatureIDCounter++, new Structure(), startingGenome);
-            population.Add(newCreature);
+            startingGenome.genomeID = globalGenomeIDCounter++;
+            population.Add(startingGenome);
         }
 
         // initial speciation so every creature has a group from start
@@ -113,15 +113,15 @@ public class NEAT {
             s.totalFitness = 0; // reset total fitness for this gen
 
             // compare each creature (c_i) against other creatures
-            foreach (Creature ci in s.members)
+            foreach (Genome gi in s.members)
             {
                 float sharingSum = 0;
 
                 // calc the sharing func sum for all members in the specie
-                foreach (Creature cj in s.members)
+                foreach (Genome gj in s.members)
                 {
                     // calc the distance between genomes
-                    float dist = ci.genome.GetCompatibilityDistance(cj.genome, c1, c2, c3);
+                    float dist = gi.GetCompatibilityDistance(gj, c1, c2, c3);
 
                     // they share fitness if within the threshold
                     if (dist < compatibilityThreshold)
@@ -135,10 +135,10 @@ public class NEAT {
                 if (sharingSum < 1.0f) sharingSum = 1.0f;
 
                 // adjusted fitness formula: f'i = fi / sum(sh(dist))
-                ci.genome.fitness = ci.genome.fitness / sharingSum;
+                gi.fitness = gi.fitness / sharingSum;
 
                 // add to total for offspring calc
-                s.totalFitness += ci.genome.fitness;
+                s.totalFitness += gi.fitness;
 
             }
             Debug.Log($"Total fitness for specie {s.specieID}: {s.totalFitness}");
@@ -154,7 +154,7 @@ public class NEAT {
         }
 
         // assign each creature to a species
-        foreach (Creature creature in population)
+        foreach (Genome genome in population)
         {
             bool foundSpecies = false;
 
@@ -163,9 +163,9 @@ public class NEAT {
             {   
                 // ends of species lost its representative
                 // and compat dist formula
-                if (s.representative != null && creature.genome.GetCompatibilityDistance(s.representative.genome, c1, c2, c3) < compatibilityThreshold)
+                if (s.representative != null && genome.GetCompatibilityDistance(s.representative, c1, c2, c3) < compatibilityThreshold)
                 {
-                    s.members.Add(creature);
+                    s.members.Add(genome);
                     foundSpecies = true;
                     break;
                 }
@@ -174,7 +174,7 @@ public class NEAT {
             // if no compatible species, create new
             if (!foundSpecies)
             {
-                Specie newSpecie = new Specie(globalSpecieIDCounter++, creature);
+                Specie newSpecie = new Specie(globalSpecieIDCounter++, genome);
                 species.Add(newSpecie);
             }
 
@@ -191,7 +191,7 @@ public class NEAT {
 
     public void Reproduce()
     {
-        List<Creature> newPopulation = new List<Creature>();
+        List<Genome> newPopulation = new List<Genome>();
         
         // calc global fitness
         float globalTotalFitness = 0;
@@ -205,11 +205,12 @@ public class NEAT {
         {
             Debug.LogWarning("Global fitness was 0. Creating a completely random new generation.");    
             // mutate existing ones heavilty to force something new
-            foreach (Creature c in population)
+            foreach (Genome g in population)
             {
-                Genome mutant = c.genome.Clone();
+                Genome mutant = g.Clone();
                 mutant.Mutate(globalInnovationTracker, this);
-                newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), mutant));            
+                mutant.genomeID = globalGenomeIDCounter++;
+                newPopulation.Add(mutant);            
             }
             population = newPopulation;
             return; // exit early
@@ -224,7 +225,7 @@ public class NEAT {
             if (s.members.Count == 0) continue;
 
             // sort to ensure the elite is at index 0 and tournament seleciton is fast
-            s.members.Sort((a, b) => b.genome.fitness.CompareTo(a.genome.fitness)); // highest first
+            s.members.Sort((a, b) => b.fitness.CompareTo(a.fitness)); // highest first
 
             // determine how many slots this species gets in the next gen
             int offspringCount = s.DetermineOffspringCount(globalTotalFitness, populationLimit);
@@ -232,23 +233,24 @@ public class NEAT {
             if (offspringCount > 0)
             {
                 // elitism: best member of the species survivies unchanged
-                Genome eliteBrain = s.members[0].genome.Clone(); // clone to ensure unique brain instance
+                Genome eliteBrain = s.members[0].Clone(); // clone to ensure unique brain instance
 
                 // instantiate the elite a fresh instance and a unique Global ID
-                newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), eliteBrain));
+                eliteBrain.genomeID = globalGenomeIDCounter++;
+                newPopulation.Add(eliteBrain);
 
                 // generate the remainder of the specie's slots through mating
                 for (int i = 1; i < offspringCount; i++)
                 {
-                    Creature[] parents = s.SelectParents();
+                    Genome[] parents = s.SelectParents();
                     
                     // combine parent genomes into a new child genome.
-                    Genome childGenome = parents[0].genome.Crossover(parents[1].genome, globalGenomeIDCounter++);
+                    Genome childGenome = parents[0].Crossover(parents[1], globalGenomeIDCounter++);
                     
                     // mutation
                     childGenome.Mutate(globalInnovationTracker, this);
-
-                    newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
+                    childGenome.genomeID = globalGenomeIDCounter++;
+                    newPopulation.Add(childGenome.Clone());
                 }
             }
         }
@@ -264,10 +266,11 @@ public class NEAT {
 
             while (newPopulation.Count < populationLimit)
             {
-                Creature[] parents = bestSpecie.SelectParents();
-                Genome childGenome = parents[0].genome.Crossover(parents[1].genome, globalGenomeIDCounter++);
+                Genome[] parents = bestSpecie.SelectParents();
+                Genome childGenome = parents[0].Crossover(parents[1], globalGenomeIDCounter++);
                 childGenome.Mutate(globalInnovationTracker, this);
-                newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
+                childGenome.genomeID = globalGenomeIDCounter++;
+                newPopulation.Add(childGenome.Clone());
             }
         }
 
@@ -276,14 +279,72 @@ public class NEAT {
     }
 }
 
+public class Innovation {
+    // increments when a unique mutation occurs
+    private int innovationTracker = 0;
+    
+    // key: InnovationID
+    // value: [string mutationType, int nodeInID, int nodeOutID]
+    // or for nodes: [string mutationType, int oldConnectionID]
+    private Dictionary<int, List<object>> innovationRecords = new Dictionary<int, List<object>>();
+
+    // checks if this mutation has occured before
+    // returns the existing id if found, or new id if not
+    public int GetInnovationID(int nodeInID, int nodeOutID, string mutationType) 
+    {
+        // loop through existing records
+        foreach (var record in innovationRecords)
+        {
+            string type = (string)record.Value[0];
+            int inID = (int)record.Value[1];
+            int outID = (int)record.Value[2];
+
+            if (type == mutationType && inID == nodeInID && outID == nodeOutID)
+            {
+                return record.Key; // return exsiting id
+            }
+        }
+
+        // brand new muation if got here
+        int newID = innovationTracker;
+
+        // record it
+        List<object> newRecord = new List<object> { mutationType, nodeInID, nodeOutID };
+        innovationRecords.Add(newID, newRecord);
+
+        // increment global tracker for next unique mutation
+        innovationTracker++;
+
+        return newID;
+    }
+
+    // helper for splitting a connection to add a node
+    public int GetNodeInnovationNumber(int connectionID)
+    {
+        string type = "AddNode";
+        foreach (var record in innovationRecords)
+        {
+            if ((string)record.Value[0] == type && (int)record.Value[1] == connectionID)
+            {
+                return record.Key;
+            }
+        }
+
+        int newID = innovationTracker;
+        innovationRecords.Add(newID, new List<object> { type, connectionID, -1 }); // -1 as placeholder
+        innovationTracker++;
+        return newID;
+    }
+}
+
 [System.Serializable]
 public class Specie {
     public int specieID;
-    public List<Creature> members = new List<Creature>();
-    public Creature representative;
+    public List<Genome> members = new List<Genome>();
+    public Genome representative;
     public float totalFitness;
 
-    public Specie(int id, Creature firstMember)
+    public Specie(int id, Genome firstMember)
     {
         this.specieID = id;
         this.representative = firstMember;
@@ -308,13 +369,13 @@ public class Specie {
         return Mathf.FloorToInt(percentage * popLimit);
     }
 
-    public Creature[] SelectParents()
+    public Genome[] SelectParents()
     {
         // assume members list is already sorted by fitness (highest to lowest)
 
         // truncation: conly consider top 50%
         int eligibleCount = Mathf.Max(1, Mathf.CeilToInt(members.Count / 2f));
-        Creature[] parents = new Creature[2];
+        Genome[] parents = new Genome[2];
 
         for (int i = 0; i < 2; i++)
         {
@@ -327,21 +388,5 @@ public class Specie {
         }
 
         return parents;
-    }
-}
-
-[System.Serializable]
-public class Creature {
-    public int creatureID;
-    public Structure structure;
-    public Genome genome;
-    public float fitness;
-
-    public Creature(int id, Structure structRef, Genome genomeRef) 
-    {
-        this.creatureID = id;
-        this.structure = structRef;
-        this.genome = genomeRef;
-        this.fitness = 0f;
     }
 }
