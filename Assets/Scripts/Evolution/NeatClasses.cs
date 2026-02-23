@@ -25,7 +25,6 @@ public class NEAT {
     // trackers
     public Innovation globalInnovationTracker;
     private int globalSpecieIDCounter = 0;
-    private int globalCreatureIDCounter = 0;
     private int globalGenomeIDCounter = 0;
 
     // called once to generate generation 0
