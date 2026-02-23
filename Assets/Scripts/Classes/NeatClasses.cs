@@ -243,7 +243,7 @@ public class NEAT {
                     Creature[] parents = s.SelectParents();
                     
                     // combine parent genomes into a new child genome.
-                    Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
+                    Genome childGenome = parents[0].genome.Crossover(parents[1].genome, globalGenomeIDCounter++);
                     
                     // mutation
                     childGenome.Mutate(globalInnovationTracker, this);
@@ -265,7 +265,7 @@ public class NEAT {
             while (newPopulation.Count < populationLimit)
             {
                 Creature[] parents = bestSpecie.SelectParents();
-                Genome childGenome = parents[0].genome.Crossover(parents[1].genome);
+                Genome childGenome = parents[0].genome.Crossover(parents[1].genome, globalGenomeIDCounter++);
                 childGenome.Mutate(globalInnovationTracker, this);
                 newPopulation.Add(new Creature(globalCreatureIDCounter++, new Structure(), childGenome));
             }

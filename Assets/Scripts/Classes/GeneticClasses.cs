@@ -19,7 +19,7 @@ public class Genome {
         // mutate weights
         if (UnityEngine.Random.value < settings.mutateWeightRate) 
         {
-            MutateWeights();
+            MutateWeights(settings.mutateWeightStep);
         }
 
         // add Connection 
@@ -34,14 +34,14 @@ public class Genome {
             AddNode(innovation);
         }
     }
-    public void MutateWeights()
+    public void MutateWeights(float step)
     {
         foreach (ConnectionGene conn in connections)
         {
-            if (UnityEngine.Random.value < 0.5f)
+            if (UnityEngine.Random.value < 0.9f) // 90% chance to preturb
             {
                 // preturb existing weight slightly
-                conn.weight += UnityEngine.Random.Range(-0.5f, 0.5f);
+                conn.weight += UnityEngine.Random.Range(-step, step);
             }
             else if (UnityEngine.Random.value < 0.05f) // small chance for replace
             {
@@ -49,6 +49,7 @@ public class Genome {
             }
         }
     }
+    
     public void AddConnection(Innovation innovation)
     {
         // separate nodes inot potential sources and potential targets
@@ -105,11 +106,15 @@ public class Genome {
         // disable the old one
         connToSplit.enabled = false;
 
-        // create new node
-        // pass id of the conn to split so tracker can check if this split has happened before
-        int newNodeID = innovation.GetNodeInnovationNumber(connToSplit.innovationID);    
-        NodeGene newNode = new NodeGene(newNodeID, "HIDDEN", "Sigmoid", 0f);
-        nodes.Add(newNode);
+        // get the ID for new node
+        int newNodeID = innovation.GetNodeInnovationNumber(connToSplit.innovationID); 
+
+        // only add node if genome doesnt have it
+        if (nodes.Find(n => n.innovationID == newNodeID) == null) 
+        {
+            NodeGene newNode = new NodeGene(newNodeID, "HIDDEN", "Sigmoid", 0f);
+            nodes.Add(newNode);
+        }
 
         // link 1: source to newnode (weight = 1)
         int link1_ID = innovation.GetInnovationID(connToSplit.inputNode, newNodeID, "AddConnection");
@@ -123,33 +128,37 @@ public class Genome {
         connections.Add(link2);
     }
 
-    public Genome Crossover(Genome partner)
+    public Genome Crossover(Genome partner, int newID) // pass in unique id
     {
         // determine relative fitness
-        bool equalFitness = Mathf.Approximately(this.fitness, partner.fitness);
-        Genome fitter = this.fitness > partner.fitness ? this : partner;
-        Genome loser = this.fitness > partner.fitness ? partner : this;
+        bool equalFitness = Mathf.Approximately(fitness, partner.fitness);
+        Genome fitter = fitness > partner.fitness ? this : partner;
+        Genome loser = fitness > partner.fitness ? partner : this;
 
-        Genome child = new Genome(fitter.genomeID);
+        Genome child = new Genome(newID);
 
-        // put loser genes in dict for quick matching
+        // dict for matching genes
         Dictionary<int, ConnectionGene> loserGenes = new Dictionary<int, ConnectionGene>();
-        foreach (var gene in loser.connections) loserGenes.Add(gene.innovationID, gene);
+        foreach (var gene in loser.connections) 
+        {
+            loserGenes[gene.innovationID] = gene; 
+        }
 
-        // ingerit connections
+        // inherit connections
         foreach (ConnectionGene fitterGene in fitter.connections)
         {
             if (loserGenes.ContainsKey(fitterGene.innovationID))
             {
-                // matching: average weight
+                // matching: pick randomly form either parent
                 ConnectionGene loserGene = loserGenes[fitterGene.innovationID];
-                float averagedWeight = (fitterGene.weight + loserGene.weight) / 2f;
+                float selectedWeight = UnityEngine.Random.value < 0.5f ? fitterGene.weight : loserGene.weight;
                 
+                // if either parent is disabled, child as a high chance (75%) of being disabled
                 bool isEnabled = true;
                 if ((!fitterGene.enabled || !loserGene.enabled) && UnityEngine.Random.value < 0.75f)
                     isEnabled = false;
 
-                child.connections.Add(new ConnectionGene(fitterGene.innovationID, fitterGene.inputNode, fitterGene.outputNode, averagedWeight, isEnabled));
+                child.connections.Add(new ConnectionGene(fitterGene.innovationID, fitterGene.inputNode, fitterGene.outputNode, selectedWeight, isEnabled));
             }
             else
             {
@@ -158,37 +167,42 @@ public class Genome {
             }
         }
 
-        // if fitness is equal, also take disjoint genes from the loser
+        // equal fitness
         if (equalFitness)
-        {
-            Dictionary<int, ConnectionGene> fitterGenes = new Dictionary<int, ConnectionGene>();
-            foreach (var gene in fitter.connections) fitterGenes.Add(gene.innovationID, gene);
-
+        {   
+            // inherit disjoint/excess genes from both to maximise diversity
             foreach (ConnectionGene loserGene in loser.connections)
             {
-                if (!fitterGenes.ContainsKey(loserGene.innovationID))
+                if (child.connections.Find(c => c.innovationID == loserGene.innovationID) == null)
                 {
                     child.connections.Add(new ConnectionGene(loserGene.innovationID, loserGene.inputNode, loserGene.outputNode, loserGene.weight, loserGene.enabled));
                 }
             }
         }
 
-        // node Inheritance
-        HashSet<int> requiredNodes = new HashSet<int>();
-        foreach (var conn in child.connections) { requiredNodes.Add(conn.inputNode); requiredNodes.Add(conn.outputNode); }
+        // node inheritance
+        HashSet<int> addedNodeIDs = new HashSet<int>();
 
-        // use combined list of nodes from both parents to make sure we find all ids
-        List<NodeGene> allPossibleNodes = new List<NodeGene>(fitter.nodes);
-        allPossibleNodes.AddRange(loser.nodes);
-
-        foreach (var node in allPossibleNodes)
+        // inherites all nodes form fitter, to ensure potential for future mutations
+        foreach (var node in fitter.nodes)
         {
-            if (requiredNodes.Contains(node.innovationID))
+            child.nodes.Add(new NodeGene(node.innovationID, node.nodeType, node.activation, node.bias));
+            addedNodeIDs.Add(node.innovationID);
+        }
+
+        // if equal fitness, also add nodes form loser that are unique
+        if (equalFitness)
+        {
+            foreach (var node in loser.nodes)
             {
-                // avoid duplicates
-                if (child.nodes.Find(n => n.innovationID == node.innovationID) == null)
+                // rule out existing nodes
+                if (!addedNodeIDs.Contains(node.innovationID))
+                {
                     child.nodes.Add(new NodeGene(node.innovationID, node.nodeType, node.activation, node.bias));
+                    addedNodeIDs.Add(node.innovationID);
+                }
             }
+
         }
 
         return child;

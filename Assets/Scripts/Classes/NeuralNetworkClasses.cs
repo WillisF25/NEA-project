@@ -213,7 +213,7 @@ public class Node {
             case "sigmoid": return (x) => 1f / (1f + (float)Math.Exp(-x));
             case "relu": return (x) => Math.Max(0, x);
             case "linear": return (x) => x;
-            default: return (x) => (float)Math.Tanh(x);
+            default: return (x) => (float)Math.Tanh(x); // default is tanh
         }
     }
 }
