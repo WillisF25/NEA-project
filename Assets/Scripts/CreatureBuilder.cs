@@ -15,6 +15,9 @@ public class CreatureBuilder : MonoBehaviour
 
     public bool isSimulating = false;
 
+    // map gameobj to its data
+    private Dictionary<GameObject, Joint> jointMap = new Dictionary<GameObject, Joint>();
+
     // to remember the fist click for a link
     private GameObject selectedJointA = null;
     
@@ -51,7 +54,7 @@ public class CreatureBuilder : MonoBehaviour
         else if (currentMode == BuildMode.Linking)
         {
             // in linking mode, only look for existing joints to link
-            if (hit != null && hit.CompareTag("Joint"))
+            if (hit != null && jointMap.ContainsKey(hit.gameObject))
             {
                 SelectedJoint(hit.gameObject);
             }
@@ -62,23 +65,16 @@ void SpawnJoint(Vector2 pos)
     // determine id before creating data
     int newID = currentStructure.joints.Count;
     Joint data = new Joint(newID, pos);
-    currentStructure.joints.Add(data);
 
     // create obj in game
     GameObject newJoint = Instantiate(jointPrefab, pos, Quaternion.identity);
     newJoint.name = $"Joint_{newID}";
 
-    JointIdentity identity = newJoint.GetComponent<JointIdentity>();
+    // link them in both direcitons
+    data.jointObject = newJoint;
+    jointMap.Add(newJoint, data);
 
-    // add new if prefab didnt have one already
-    if (identity == null)
-        {
-            identity = newJoint.AddComponent<JointIdentity>();
-        }
-    
-    // assign data to script
-    identity.id = data.id;
-    identity.jointData = data;
+    currentStructure.joints.Add(data); // add to current structure data
     
     Debug.Log($"Spawned Joint {newID} at {pos}");
 }
@@ -110,27 +106,24 @@ void SpawnJoint(Vector2 pos)
     {   
         if (a == b) return;
 
-        Joint dataA = a.GetComponent<JointIdentity>().jointData;
-        Joint dataB = b.GetComponent<JointIdentity>().jointData;
+        Joint jointA = jointMap[a];
+        Joint jointB = jointMap[b];
 
         // create and record link data
         int newID = currentStructure.links.Count;
-        Link newLinkData = new Link(newID, dataA, dataB, currentLinkType);
+        Link newLinkData = new Link(newID, jointA, jointB, currentLinkType);
         currentStructure.links.Add(newLinkData);
         
-        // setup visuals
+        // setup visuals (handled by LinkFollower)
         GameObject linkVisual = Instantiate(linkPrefab);
         linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
+
+        // setup physics
         LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
+        lr.startColor = currentLinkType == LinkType.Muscle ? Color.red : Color.white;
+        lr.endColor = lr.startColor;
 
-        LinkIdentity linkID = linkVisual.GetComponent<LinkIdentity>() ?? linkVisual.AddComponent<LinkIdentity>();
-        linkID.id = newID;
-        linkID.sourceID = dataA.id;
-        linkID.targetID = dataB.id;
-        linkID.type = currentLinkType.ToString();
-        linkID.length = newLinkData.length;
-
-        // physics setup
+        // add the Muscle or Bone script
         if (currentLinkType == LinkType.Muscle)
         {
             lr.startColor = Color.red;
@@ -167,14 +160,118 @@ void SpawnJoint(Vector2 pos)
         selectedJointA = null;
     }
 
-    // UI button connectors
-    public void SetModeSpawning() => currentMode = BuildMode.Spawning;
-    public void SetModeLinking() => currentMode = BuildMode.Linking;
+    public void ClearAll()
+    {   
+        foreach (var pair in jointMap) Destroy(pair.Key); // destroy all joint gameobjs
 
-    public void SetTypeBone() => currentLinkType = LinkType.Bone;
-    public void SetTypeMuscle() => currentLinkType = LinkType.Muscle;
+        // Links are destoryed automatically, but we do this to be safe
+        GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
+        foreach (GameObject l in links) Destroy(l);
 
-    public void ToggleSimulation()
+        // reset data
+        currentStructure = new Structure(); // wipe strucutre list
+        selectedJointA = null; // clear seleciton
+        isSimulating = false; // reset mode
+        jointMap.Clear(); // clear the joint map
+    }
+
+    public void SaveCreature()
+    {
+        // create the container
+        CreatureData data = new CreatureData();
+
+
+        // map the gameobj to its id for links later
+        foreach (Joint j in currentStructure.joints)
+        {
+            // use latest position in case it moved
+            Vector3 pos = j.jointObject.transform.position;
+            data.joints.Add(new JointData(j.id, pos.x, pos.y));
+        }
+
+        // find all links and save their connections
+        foreach (Link l in currentStructure.links)
+        {
+            
+                data.links.Add(new LinkData(
+                    l.linkID,                     
+                    l.jointA.id, 
+                    l.jointB.id, 
+                    l.type.ToString(), 
+                    l.length
+                ));
+            
+        }
+
+        // send data to manager
+        SaveLoadManager.SaveCreatureStructure(data, "creature.json");
+    }
+
+    public void LoadCreature()
+    {
+        // ask manager for the data
+        CreatureData data = SaveLoadManager.LoadCreatureStructure("creature.json");        
+        
+        // presence check
+        if (data == null) return;
+
+        // clear current scene
+        ClearAll();
+
+        // rebuild joints , and map ids to gameobjs
+        Dictionary<int, GameObject> idToOgj = new Dictionary<int, GameObject>();
+
+        foreach (JointData jData in data.joints)
+        {
+            // same as spawn logic
+            Vector2 pos = new Vector2(jData.x, jData.y);
+
+            // spawn manually to set the wanted immediately
+            GameObject newJoint = Instantiate(jointPrefab, pos, Quaternion.identity);
+            
+            Joint jointLogic = new Joint(jData.id, pos);
+            jointLogic.jointObject = newJoint; // link the data to the obj
+            
+            // add to all the relevant data structures
+            currentStructure.joints.Add(jointLogic);
+            jointMap.Add(newJoint, jointLogic); 
+            idToOgj.Add(jData.id, newJoint);
+        }
+
+        // rebuild Links
+        foreach (LinkData lData in data.links)
+        {   
+            // find current type for link creation
+            currentLinkType = (lData.type == "Bone") ? LinkType.Bone : LinkType.Muscle;
+            // create the link using the mapped gameobjs
+            CreateLink(idToOgj[lData.sourceJointID], idToOgj[lData.targetJointID]);
+        }
+    }
+        
+    
+
+    public void DeleteSaveFile()
+    {
+        SaveLoadManager.DeleteSaveFile("creature.json");
+    }
+
+    public void StartSimulation()
+    {
+        // check if creature actually has joints
+        if (currentStructure.joints.Count == 0)
+        {
+            Debug.LogWarning("Cannot simulate, no creature joints found");
+            // ui popup later
+            return;
+        }
+        // save the current creature so next scene can find it
+        SaveCreature();
+
+        // load simulation scene
+        SceneManager.LoadScene("Simulation");
+    }
+
+        public void ToggleSimulation()
     {
         isSimulating = !isSimulating; // toggle
 
@@ -201,133 +298,11 @@ void SpawnJoint(Vector2 pos)
             }
         }
     }
+    
+    // UI button connectors
+    public void SetModeSpawning() => currentMode = BuildMode.Spawning;
+    public void SetModeLinking() => currentMode = BuildMode.Linking;
 
-    public void ClearAll()
-    {
-        // destroy all links
-        GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
-        foreach (GameObject l in links) Destroy(l);
-
-        // destroy all joints
-        GameObject[] joints = GameObject.FindGameObjectsWithTag("Joint");
-        foreach (GameObject j in joints) Destroy(j);
-
-        // reset data
-        currentStructure = new Structure(); // wipe strucutre list
-        selectedJointA = null; // clear seleciton
-        isSimulating = false; // reset mode
-    }
-
-    public void SaveCreature()
-    {
-        // create the container
-        CreatureData data = new CreatureData();
-
-        // find all joints and save their positions
-        GameObject[] allJoints = GameObject.FindGameObjectsWithTag("Joint");
-        
-        // map the gameobj to its id for links later
-        foreach (GameObject j in allJoints)
-        {
-            JointIdentity idComponent = j.GetComponent<JointIdentity>();
-            // just save the raw numbers
-            data.joints.Add(new JointData(idComponent.id, j.transform.position.x, j.transform.position.y));
-        }
-
-        // find all links and save their connections
-        GameObject[] allLinks = GameObject.FindGameObjectsWithTag("Link");
-        foreach (GameObject l in allLinks)
-        {
-            LinkIdentity linkInfo = l.GetComponent<LinkIdentity>(); 
-            if(linkInfo != null)
-            {
-                data.links.Add(new LinkData(
-                    linkInfo.id, 
-                    linkInfo.sourceID, 
-                    linkInfo.targetID, 
-                    linkInfo.type.ToString(), 
-                    linkInfo.length
-                ));
-            }
-        }
-
-        // send data to manager
-        SaveLoadManager.SaveCreatureStructure(data, "creature.json");
-    }
-
-    public void LoadCreature()
-    {
-        // ask manager for the data
-        CreatureData data = SaveLoadManager.LoadCreatureStructure("creature.json");        
-        
-        // presence check
-        if (data == null) return;
-
-        // clear current scene
-        ClearAll();
-
-        // rebuild joints , and map ids to gameobjs
-        Dictionary<int, GameObject> loadedJoints = new Dictionary<int, GameObject>();
-
-        foreach (JointData jData in data.joints)
-        {
-            // same as spawn logic
-            Vector2 pos = new Vector2(jData.x, jData.y);
-
-            // spawn manually to set the wanted immediately
-            GameObject newJoint = Instantiate(jointPrefab, pos, Quaternion.identity);
-            
-            // add Identity
-            JointIdentity idComp = newJoint.GetComponent<JointIdentity>();
-            if (idComp == null) idComp = newJoint.AddComponent<JointIdentity>();
-            
-            idComp.id = jData.id;
-            idComp.jointData = new Joint(jData.id, pos);
-            
-            // add to list so builder knows it
-            currentStructure.joints.Add(idComp.jointData);
-
-            // add to dictionary for link building step
-            loadedJoints.Add(jData.id, newJoint);
-        }
-
-        // rebuild Links
-        foreach (LinkData lData in data.links)
-        {
-            // find the two joints this link connects
-            if (loadedJoints.ContainsKey(lData.sourceJointID) && loadedJoints.ContainsKey(lData.targetJointID))
-            {
-                GameObject bodyA = loadedJoints[lData.sourceJointID];
-                GameObject bodyB = loadedJoints[lData.targetJointID];
-
-                // set the builder mode temporarily to create the right type
-                if (lData.type == "Bone") currentLinkType = LinkType.Bone;
-                else currentLinkType = LinkType.Muscle;
-
-                CreateLink(bodyA, bodyB);
-            }
-        }
-        
-    }
-
-    public void DeleteSaveFile()
-    {
-        SaveLoadManager.DeleteSaveFile("creature.json");
-    }
-
-    public void StartSimulation()
-    {
-        // check if creature actually has joints
-        if (currentStructure.joints.Count == 0)
-        {
-            Debug.LogWarning("Cannot simulate, no creature joints found");
-            // ui popup later
-            return;
-        }
-        // save the current creature so next scene can find it
-        SaveCreature();
-
-        // load simulation scene
-        SceneManager.LoadScene("Simulation");
-    }
+    public void SetTypeBone() => currentLinkType = LinkType.Bone;
+    public void SetTypeMuscle() => currentLinkType = LinkType.Muscle;
 }
