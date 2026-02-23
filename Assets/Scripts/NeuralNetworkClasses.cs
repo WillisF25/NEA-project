@@ -233,9 +233,9 @@ public class Connection {
 
     public Connection(Node from, Node to, ConnectionGene gene) 
     {
-        this.inputNode = from;
-        this.outputNode = to;
-        this.weight = gene.weight;
-        this.enabled = gene.enabled;
+        inputNode = from;
+        outputNode = to;
+        weight = gene.weight;
+        enabled = gene.enabled;
     }
 }

@@ -60,24 +60,24 @@ public class CreatureBuilder : MonoBehaviour
             }
         }
     }
-void SpawnJoint(Vector2 pos)
-{
-    // determine id before creating data
-    int newID = currentStructure.joints.Count;
-    Joint data = new Joint(newID, pos);
+    void SpawnJoint(Vector2 pos)
+    {
+        // determine id before creating data
+        int newID = currentStructure.joints.Count;
+        Joint data = new Joint(newID, pos);
 
-    // create obj in game
-    GameObject newJoint = Instantiate(jointPrefab, pos, Quaternion.identity);
-    newJoint.name = $"Joint_{newID}";
+        // create obj in game
+        GameObject newJoint = Instantiate(jointPrefab, pos, Quaternion.identity);
+        newJoint.name = $"Joint_{newID}";
 
-    // link them in both direcitons
-    data.jointObject = newJoint;
-    jointMap.Add(newJoint, data);
+        // link them in both direcitons
+        data.jointObject = newJoint;
+        jointMap.Add(newJoint, data);
 
-    currentStructure.joints.Add(data); // add to current structure data
-    
-    Debug.Log($"Spawned Joint {newID} at {pos}");
-}
+        currentStructure.joints.Add(data); // add to current structure data
+        
+        Debug.Log($"Spawned Joint {newID} at {pos}");
+    }
 
     void SelectedJoint(GameObject jointObj)
     {
@@ -257,13 +257,34 @@ void SpawnJoint(Vector2 pos)
 
     public void StartSimulation()
     {
-        // check if creature actually has joints
-        if (currentStructure.joints.Count == 0)
+        // Muscle presence check
+        bool hasMuscle = false;
+        foreach (Link l in currentStructure.links)
         {
-            Debug.LogWarning("Cannot simulate, no creature joints found");
-            // ui popup later
+            if (l.type == LinkType.Muscle) { hasMuscle = true; break; }
+        }
+
+        if (!hasMuscle)
+        {
+            Debug.LogWarning("Creatures that have no muscle will be unable to move.");
+            // ui action
             return;
         }
+
+        bool validStructure = ValidateStructure(currentStructure, out List<Joint> isolatedJoints);
+        if (!validStructure)
+        {
+            Debug.LogError("Invalid creature structure.");
+
+            // highlight disconnected ones red
+            foreach (Joint j in isolatedJoints)
+            {   
+                if (j.jointObject != null)
+                    j.jointObject.GetComponent<SpriteRenderer>().color = Color.red;
+            }
+            return;
+        }
+
         // save the current creature so next scene can find it
         SaveCreature();
 
@@ -297,6 +318,53 @@ void SpawnJoint(Vector2 pos)
                 }
             }
         }
+    }
+
+        public bool ValidateStructure (Structure structure, out List<Joint> isolatedJoints)
+    {
+        isolatedJoints = new List<Joint>();
+
+        // if 0, failed presence check
+        // if 1, means no muscle
+        if (structure.joints.Count <= 1) return false;
+
+        // find root joint (joint with lowest id)
+        Joint rootJoint = structure.joints[0];
+
+        // use bfs to find all reachable joints
+        HashSet<Joint> visited = new HashSet<Joint>();
+        Queue<Joint> searchQueue = new Queue<Joint>();
+
+        searchQueue.Enqueue(rootJoint);
+        visited.Add(rootJoint);
+
+        while (searchQueue.Count > 0)
+        {
+            Joint current = searchQueue.Dequeue();
+
+            // look through all links to find neighbours
+            foreach (Link link in structure.links) 
+            {
+                if (link.jointA == current && !visited.Contains(link.jointB)) 
+                {
+                    visited.Add(link.jointB);
+                    searchQueue.Enqueue(link.jointB);
+                }
+                else if (link.jointB == current && !visited.Contains(link.jointA)) 
+                {
+                    visited.Add(link.jointA);
+                    searchQueue.Enqueue(link.jointA);
+                }
+            }
+        }
+
+        // add to isolatedJoints list if not in visited
+        foreach (Joint j in structure.joints)
+        {
+            if (!visited.Contains(j)) isolatedJoints.Add(j);
+        }
+        
+        return isolatedJoints.Count == 0;
     }
     
     // UI button connectors
