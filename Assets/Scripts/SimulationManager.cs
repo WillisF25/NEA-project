@@ -123,6 +123,7 @@ public class SimulationManager : MonoBehaviour
             Rigidbody2D rb = jObj.GetComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Dynamic; 
             rb.sleepMode = RigidbodySleepMode2D.NeverSleep; // keep creature simulated
+            rb.freezeRotation = true; // prevent joints acting as wheels
 
             loadedJoints.Add(jData.id, jObj);
             spawnedJoints.Add(jObj.transform); // add to list for brain
