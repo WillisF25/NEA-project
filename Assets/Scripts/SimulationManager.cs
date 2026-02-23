@@ -7,15 +7,17 @@ public class SimulationManager : MonoBehaviour
     public GameObject jointPrefab;
     public GameObject linkPrefab;
 
+    // where the json loads to and holds the data for the structure
+    private CreatureData data;
+
     // NEAT variables
     public NEAT neatSystem;
     public float generationTimeLimit;
     private float globalTimer;
     public TextMeshProUGUI timerDisplay;
-
-    private CreatureData data;
     
-    // use this to tell the camera which joint to follow
+    // camrea stuff
+    private CreatureFollower[] activeCreatures;
     public static Transform focusTarget; 
 
     void Start()
@@ -59,6 +61,7 @@ public class SimulationManager : MonoBehaviour
         }
 
         UpdateTimerUI();
+        UpdateCamreaTarget();
     }
 
     void SpawnPopulation()
@@ -67,6 +70,8 @@ public class SimulationManager : MonoBehaviour
         {
             AssembleCreature(c.genome);
         }
+
+        activeCreatures = FindObjectsByType<CreatureFollower>(FindObjectsSortMode.None);
     }
 
     void AdvanceGeneration()
@@ -85,6 +90,10 @@ public class SimulationManager : MonoBehaviour
         GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
         foreach (GameObject j in joints) Destroy(j);
         foreach (GameObject l in links) Destroy(l);
+
+        // clear camrea target array
+        activeCreatures = null;
+        focusTarget = null;
 
         // spawn in new gen
         SpawnPopulation();
@@ -207,5 +216,33 @@ public class SimulationManager : MonoBehaviour
         float displayTime = Mathf.Max(0, globalTimer);
         
         timerDisplay.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+    }
+
+    // camrea logic
+    void UpdateCamreaTarget()
+    {
+        if (activeCreatures == null || activeCreatures.Length == 0) return;
+
+        CreatureFollower bestCreature = null;
+        float maxFitness = -float.MaxValue;
+
+        for (int i = 0; i < activeCreatures.Length; i++)
+        {
+            // check if the creature still exists in the scene
+            if (activeCreatures[i] == null) continue;
+
+            // compare fitness
+            if (activeCreatures[i].currentFitness > maxFitness)
+            {
+                maxFitness = activeCreatures[i].currentFitness;
+                bestCreature = activeCreatures[i];
+            }
+        }
+
+        // only update the target if found a living creature
+        if (bestCreature != null)
+        {
+            focusTarget = bestCreature.transform;
+        }
     }
 }
