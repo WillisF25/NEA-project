@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.InputSystem;
 
 public class CreatureFollower : MonoBehaviour
 {
@@ -11,12 +12,15 @@ public class CreatureFollower : MonoBehaviour
     private float[] inputs;
     private float[] outputs;
     
-    // fitness stuff
+    // fitness variables
     public Genome assignedGenome;
     private Vector3 startPosition;
     public float currentFitness;
 
-    public void Init(Genome genome, List<Muscle> creatureMuscles, List<Transform> creatureJoints)
+    // camrea use
+    private List<LineRenderer> creatureLines = new List<LineRenderer>();
+
+    public void Init(Genome genome, List<Muscle> creatureMuscles, List<Transform> creatureJoints, List<LineRenderer> lines)
     {
         network = new NeuralNetwork(genome);
         muscles = creatureMuscles;
@@ -24,8 +28,16 @@ public class CreatureFollower : MonoBehaviour
         assignedGenome = genome;
         startPosition = transform.position;
 
-        // init buffer
+        // initialise buffer
         inputs = new float[1 + joints.Count]; // oscillator + joint heights
+
+        creatureLines = lines;
+    }
+
+        void Update()
+    {   
+        // distance travelled on the x axis
+        currentFitness = transform.position.x - startPosition.x;
     }
 
     void FixedUpdate() // FixedUpdate for physcis consistency
@@ -56,15 +68,41 @@ public class CreatureFollower : MonoBehaviour
         }
     }
 
-    void Update()
-    {   
-        // distance travelled on the x axis
-        currentFitness = transform.position.x - startPosition.x;
-    }
-
     public float GetFinalFitness()
     {   
         // return the fitness score at the end of the generation
         return currentFitness;
+    }
+
+    // camrea logic for unrendering creatures
+    public void SetVisibility (float alpha)
+    {   
+        // update Joints
+        foreach (Transform t in joints)
+        {
+            if (t == null) continue;
+            SpriteRenderer sr = t.GetComponent<SpriteRenderer>();
+            if (sr != null)
+            {
+                Color c = sr.color;
+                c.a = alpha;
+                sr.color = c;
+            }
+        }
+
+        // update Links
+        foreach (LineRenderer lr in creatureLines)
+        {   
+            if (lr == null) continue;
+
+            // only update the alpha of existing start/end
+            Color start = lr.startColor;
+            start.a = alpha;
+            lr.startColor = start;
+
+            Color end = lr.endColor;
+            end.a = alpha;
+            lr.endColor = end;
+        }
     }
 }

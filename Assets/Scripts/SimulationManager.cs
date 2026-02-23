@@ -16,9 +16,12 @@ public class SimulationManager : MonoBehaviour
     private float globalTimer;
     public TextMeshProUGUI timerDisplay;
     
-    // camrea stuff
-    private CreatureFollower[] activeCreatures;
+    // camrea variables
+    public enum CameraMode { ShowAll, ShowBestOnly, HighlightBest }
+    public CameraMode currentCameraMode = CameraMode.HighlightBest; // default to highlight best
     public static Transform focusTarget; 
+    private CreatureFollower[] activeCreatures;
+
 
     void Start()
     {   
@@ -111,6 +114,7 @@ public class SimulationManager : MonoBehaviour
         // list to hold brain refs
         List<Transform> spawnedJoints = new List<Transform>();
         List<Muscle> spawnedMuscles = new List<Muscle>();
+        List<LineRenderer> spawnedLines = new List<LineRenderer>();
         Dictionary<int, GameObject> loadedJoints = new Dictionary<int, GameObject>();
 
         // spawn joint
@@ -137,7 +141,7 @@ public class SimulationManager : MonoBehaviour
         {
             if (loadedJoints.ContainsKey(lData.sourceJointID) && loadedJoints.ContainsKey(lData.targetJointID))
             {
-                Muscle m = CreatePhysicalLink(loadedJoints[lData.sourceJointID], loadedJoints[lData.targetJointID], lData);
+                Muscle m = CreatePhysicalLink(loadedJoints[lData.sourceJointID], loadedJoints[lData.targetJointID], lData, spawnedLines);
                 if (m != null) spawnedMuscles.Add(m);
             }
         }
@@ -147,15 +151,18 @@ public class SimulationManager : MonoBehaviour
         CreatureFollower follower = firstJoint.AddComponent<CreatureFollower>();
 
         // start the brain
-        follower.Init(genome, spawnedMuscles, spawnedJoints);
+        follower.Init(genome, spawnedMuscles, spawnedJoints, spawnedLines);
     }
 
-    Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData)
+    Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData, List<LineRenderer> spawnedLines)
     {
         // visuals 
         GameObject linkVisual = Instantiate(linkPrefab);
         linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
         LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
+
+        // add lr to list for camrea logic use
+        spawnedLines.Add(lr);
 
         if (lData.type == "Muscle")
         {   
@@ -227,6 +234,7 @@ public class SimulationManager : MonoBehaviour
         CreatureFollower bestCreature = null;
         float maxFitness = -float.MaxValue;
 
+        // find best creature
         for (int i = 0; i < activeCreatures.Length; i++)
         {
             // check if the creature still exists in the scene
@@ -244,6 +252,29 @@ public class SimulationManager : MonoBehaviour
         if (bestCreature != null)
         {
             focusTarget = bestCreature.transform;
+        }
+
+        // apply visibilty modes
+        foreach (CreatureFollower creature in activeCreatures)
+        {
+            if (creature == null) continue;
+
+            bool isBest = creature == bestCreature;
+
+            switch (currentCameraMode)
+            {
+                case CameraMode.ShowAll:
+                    creature.SetVisibility(1.0f); // fully visible
+                    break;
+
+                case CameraMode.ShowBestOnly:
+                    creature.SetVisibility(isBest ? 1.0f : 0.0f); // hide others
+                    break;
+
+                case CameraMode.HighlightBest:
+                    creature.SetVisibility(isBest ? 1.0f : 0.2f); // fade others
+                    break;
+            }
         }
     }
 }

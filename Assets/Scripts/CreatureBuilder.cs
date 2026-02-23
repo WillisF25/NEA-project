@@ -6,7 +6,7 @@ using UnityEngine.SceneManagement;
 
 public class CreatureBuilder : MonoBehaviour
 {   
-    public enum BuildMode { Spawning, Linking}
+    public enum BuildMode { Spawning, Linking }
     public BuildMode currentMode = BuildMode.Spawning;
     public LinkType currentLinkType = LinkType.Bone;
     public GameObject jointPrefab;
