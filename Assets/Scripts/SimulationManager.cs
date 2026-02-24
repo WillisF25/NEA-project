@@ -9,6 +9,12 @@ public class SimulationManager : MonoBehaviour
     public GameObject linkPrefab;
     public Transform recordFlag; 
 
+    [Header("UI References")]
+    public TextMeshProUGUI pausePlayText;
+    public TMP_Text speedValueText;
+    public UnityEngine.UI.Slider speedSlider;
+    public TextMeshProUGUI timerDisplay;
+
     // where the json loads to and holds the data for the structure
     private CreatureData data;
 
@@ -16,7 +22,7 @@ public class SimulationManager : MonoBehaviour
     public NEAT neatSystem;
     public float generationTimeLimit;
     private float globalTimer;
-    public TextMeshProUGUI timerDisplay;
+
     
     // camera variables
     public enum CameraMode { ShowAll, ShowBestOnly, HighlightBest }
@@ -59,6 +65,16 @@ public class SimulationManager : MonoBehaviour
             neatSystem.compatibilityThreshold = BuilderSettingsManager.Instance.compatibilityThreshold;
             neatSystem.populationLimit = BuilderSettingsManager.Instance.populationLimit;
             generationTimeLimit = BuilderSettingsManager.Instance.generationTimeLimit;
+
+            Time.timeScale = BuilderSettingsManager.Instance.timeScale;
+            // set slider pos to match saved setting
+            if (speedSlider != null)
+            {
+                speedSlider.value = BuilderSettingsManager.Instance.timeScale;
+            } // slider is defaulted at 1 already
+
+            // make sure the text says "Pause" on start
+            if (pausePlayText != null) pausePlayText.text = "Pause";
         }
 
         // initialise gen 0
@@ -331,6 +347,45 @@ public class SimulationManager : MonoBehaviour
                 // move the flag to the new x pos
                 recordFlag.position = new Vector3(allTimeHigh, recordFlag.position.y, 0);
             }
+        }
+    }
+
+    public void TogglePausePlay() 
+    {   
+        if (Time.timeScale == 0.0f)
+        {
+            // resume, use slider's current
+            float resumeSpeed = (speedSlider != null) ? speedSlider.value : 1.0f;
+            Time.timeScale = resumeSpeed;
+
+            if (pausePlayText != null) pausePlayText.text = "Pause";
+        }
+        else 
+        {
+            // pause
+            Time.timeScale = 0.0f;
+            if (pausePlayText != null) pausePlayText.text = "Play";
+        }
+    }
+
+    public void OnTimeScaleSliderChanged(float newValue)
+    {
+        // update the saved setting in the background
+        if (BuilderSettingsManager.Instance != null)
+        {
+            BuilderSettingsManager.Instance.timeScale = newValue;
+        }
+
+        // update the text label
+        if (speedValueText != null)
+        {
+            speedValueText.text = newValue.ToString("F1") + "x";
+        }
+
+        // only change the actual physics time scale if not pause
+        if (pausePlayText != null && pausePlayText.text == "Pause") 
+        {
+            Time.timeScale = newValue;
         }
     }
 }
