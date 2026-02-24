@@ -4,7 +4,7 @@ public class CameraFollow : MonoBehaviour
 {   
     [Header("Follow Settings")]
     public float smoothSpeed = 5f;
-    public Vector3 offset = new Vector3(0, 2, -10); // standard 2D offset (negative z)
+    public Vector3 offset = new Vector3(-8, 2, -10); // standard 2D offset (negative z)
 
 void LateUpdate()
     {

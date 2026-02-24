@@ -10,7 +10,6 @@ public class SimulationManager : MonoBehaviour
     public Transform recordFlag; 
 
     [Header("UI References")]
-    public TextMeshProUGUI pausePlayText;
     public TMP_Text speedValueText;
     public UnityEngine.UI.Slider speedSlider;
     public TextMeshProUGUI timerDisplay;
@@ -67,16 +66,16 @@ public class SimulationManager : MonoBehaviour
             neatSystem.populationLimit = BuilderSettingsManager.Instance.populationLimit;
             generationTimeLimit = BuilderSettingsManager.Instance.generationTimeLimit;
 
+            // apply saved timeScale
             Time.timeScale = BuilderSettingsManager.Instance.timeScale;
+
             // set slider pos to match saved setting
             if (speedSlider != null)
             {
                 speedSlider.value = BuilderSettingsManager.Instance.timeScale;
             } // slider is defaulted at 1 already
-
-            // make sure the text says "Pause" on start
-            if (pausePlayText != null) pausePlayText.text = "Pause";
         }
+        else Time.timeScale = 1.0f; // no saved timeScale so switch to default
 
         // initialise gen 0
         neatSystem.InitialisePopulation(jointCount, muscleCount);
@@ -296,8 +295,9 @@ public class SimulationManager : MonoBehaviour
 
         // only update the target if found a living creature
         if (bestCreature != null)
-        {
-            focusTarget = bestCreature.transform;
+        {   
+            bestCreature.UpdateMaxDistance();
+            focusTarget = bestCreature.leadingJoint;
         }
 
         // apply visibilty modes
@@ -366,24 +366,6 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-    public void TogglePausePlay() 
-    {   
-        if (Time.timeScale == 0.0f)
-        {
-            // resume, use slider's current
-            float resumeSpeed = (speedSlider != null) ? speedSlider.value : 1.0f;
-            Time.timeScale = resumeSpeed;
-
-            if (pausePlayText != null) pausePlayText.text = "Pause";
-        }
-        else 
-        {
-            // pause
-            Time.timeScale = 0.0f;
-            if (pausePlayText != null) pausePlayText.text = "Play";
-        }
-    }
-
     public void OnTimeScaleSliderChanged(float newValue)
     {
         // update the saved setting in the background
@@ -398,10 +380,6 @@ public class SimulationManager : MonoBehaviour
             speedValueText.text = newValue.ToString("F1") + "x";
         }
 
-        // only change the actual physics time scale if not pause
-        if (pausePlayText != null && pausePlayText.text == "Pause") 
-        {
-            Time.timeScale = newValue;
-        }
+        Time.timeScale = newValue;
     }
 }
