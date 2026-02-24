@@ -14,6 +14,7 @@ public class SimulationManager : MonoBehaviour
     public TMP_Text speedValueText;
     public UnityEngine.UI.Slider speedSlider;
     public TextMeshProUGUI timerDisplay;
+    public TextMeshProUGUI cameraModeText;
 
     // where the json loads to and holds the data for the structure
     private CreatureData data;
@@ -321,6 +322,21 @@ public class SimulationManager : MonoBehaviour
                     break;
             }
         }
+    }
+
+    public void CycleCameraMode()
+    {
+        // cycle through the enum
+        int nextMode = ((int)currentCameraMode + 1) % 3;
+        currentCameraMode = (CameraMode)nextMode;
+
+        // update the button text so the user knows which mode they are in
+        if (cameraModeText != null)
+        {
+            cameraModeText.text = "Cam: " + currentCameraMode.ToString();
+        }
+
+        Debug.Log("Camera Mode switched to: " + currentCameraMode);
     }
 
     // update the marker showing the all time high
