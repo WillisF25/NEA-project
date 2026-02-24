@@ -16,6 +16,7 @@ public class CreatureFollower : MonoBehaviour
     public Genome assignedGenome;
     private Vector3 startPosition;
     public float currentFitness;
+    float maxDistance = -Mathf.Infinity;
 
     // camera use
     private List<LineRenderer> creatureLines = new List<LineRenderer>();
@@ -36,8 +37,15 @@ public class CreatureFollower : MonoBehaviour
 
         void Update()
     {   
-        // distance travelled on the x axis
-        currentFitness = transform.position.x - startPosition.x;
+        foreach (Transform j in joints)
+        {
+            float jPosX = j.position.x;
+            if (jPosX > maxDistance)
+            {
+                maxDistance = jPosX;
+            }
+        }
+        currentFitness = maxDistance;
     }
 
     void FixedUpdate() // FixedUpdate for physcis consistency
