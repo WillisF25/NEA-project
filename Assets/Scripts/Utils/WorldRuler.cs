@@ -5,7 +5,7 @@ public class WorldRuler : MonoBehaviour
 {
     public GameObject markerPrefab;
     public int markerInterval = 5; // default to every 5 meteres
-    public int initialDistance = 100; // How far out to generate initially
+    public int initialDistance = 200; // How far out to generate initially
     public float floorY = -7f; // set it to be just above the floor
 
     void Start()

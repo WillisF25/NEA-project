@@ -17,7 +17,7 @@ public class CreatureFollower : MonoBehaviour
     private Vector3 startPosition;
     public float currentFitness;
 
-    // camrea use
+    // camera use
     private List<LineRenderer> creatureLines = new List<LineRenderer>();
 
     public void Init(Genome genome, List<Muscle> creatureMuscles, List<Transform> creatureJoints, List<LineRenderer> lines)
@@ -74,7 +74,7 @@ public class CreatureFollower : MonoBehaviour
         return currentFitness;
     }
 
-    // camrea logic for unrendering creatures
+    // camera logic for unrendering creatures
     public void SetVisibility (float alpha)
     {   
         // update Joints

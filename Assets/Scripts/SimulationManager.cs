@@ -18,7 +18,7 @@ public class SimulationManager : MonoBehaviour
     private float globalTimer;
     public TextMeshProUGUI timerDisplay;
     
-    // camrea variables
+    // camera variables
     public enum CameraMode { ShowAll, ShowBestOnly, HighlightBest }
     public CameraMode currentCameraMode = CameraMode.HighlightBest; // default to highlight best
     public static Transform focusTarget; 
@@ -79,7 +79,7 @@ public class SimulationManager : MonoBehaviour
 
     void Update()
     {   
-        // Apply the Time Scale from the slider to the actual physics engine
+        // apply the time scale from the slider to the actual physics engine
         if (BuilderSettingsManager.Instance != null)
         {
             Time.timeScale = BuilderSettingsManager.Instance.timeScale;
@@ -91,7 +91,7 @@ public class SimulationManager : MonoBehaviour
         {
             AdvanceGeneration();
         }
-        UpdateCamreaTarget();
+        UpdatecameraTarget();
         UpdateRecordVisuals();
         UpdateTimerUI();
     }
@@ -123,7 +123,7 @@ public class SimulationManager : MonoBehaviour
         foreach (GameObject j in joints) Destroy(j);
         foreach (GameObject l in links) Destroy(l);
 
-        // clear camrea target array
+        // clear camera target array
         activeCreatures = null;
         focusTarget = null;
 
@@ -190,7 +190,7 @@ public class SimulationManager : MonoBehaviour
         linkVisual.GetComponent<LinkFollower>().SetTargets(a.transform, b.transform);
         LineRenderer lr = linkVisual.GetComponent<LineRenderer>();
 
-        // add lr to list for camrea logic use
+        // add lr to list for camera logic use
         spawnedLines.Add(lr);
 
         if (lData.type == "Muscle")
@@ -255,8 +255,8 @@ public class SimulationManager : MonoBehaviour
         timerDisplay.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
-    // camrea logic
-    void UpdateCamreaTarget()
+    // camera logic
+    void UpdatecameraTarget()
     {
         if (activeCreatures == null || activeCreatures.Length == 0) return;
 

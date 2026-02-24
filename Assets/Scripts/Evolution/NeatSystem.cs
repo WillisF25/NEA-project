@@ -15,7 +15,6 @@ public class NEAT {
     public float reenableGeneRate;
     public float crossoverRate;
     public float mutateWeightStep;
-    public string trainingGoal;
     public float compatibilityThreshold;
     // coefficients from the NEAT paper
     public float c1; // excess
@@ -88,7 +87,6 @@ public class NEAT {
         return g;
     }
         
-    public void SimulateGeneration() {}
     public void EvaluateFitness(CreatureFollower[] followers)
     {
         // map performce back to genetic data
@@ -344,9 +342,9 @@ public class Specie {
 
     public Specie(int id, Genome firstMember)
     {
-        this.specieID = id;
-        this.representative = firstMember;
-        this.members.Add(firstMember);
+        specieID = id;
+        representative = firstMember;
+        members.Add(firstMember);
     }
 
     public void Reset()

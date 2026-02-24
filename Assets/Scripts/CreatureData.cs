@@ -34,8 +34,8 @@ public class LinkData
     public LinkData(int id, int sourceID, int targetID, string type, float length)
     {
         this.id = id;
-        this.sourceJointID = sourceID;
-        this.targetJointID = targetID;
+        sourceJointID = sourceID;
+        targetJointID = targetID;
         this.type = type;
         this.length = length;
     }

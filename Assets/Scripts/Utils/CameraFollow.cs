@@ -11,7 +11,7 @@ void LateUpdate()
         // do nothing if no target
         if (SimulationManager.focusTarget == null) return;
 
-        // where camrea want to be
+        // where camera want to be
         Vector3 desiredPosition = SimulationManager.focusTarget.position + offset;
         
         // lerp from current position to desired position
