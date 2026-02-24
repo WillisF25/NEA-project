@@ -220,9 +220,12 @@ public class SimulationManager : MonoBehaviour
             m.rbA = a.GetComponent<Rigidbody2D>();
             m.rbB = b.GetComponent<Rigidbody2D>();
 
+            float minMult = BuilderSettingsManager.Instance.minLenMultiplier;
+            float maxMult = BuilderSettingsManager.Instance.maxLenMultiplier;
+
             // use saved length form json
-            m.minLength = lData.length * 0.5f;
-            m.maxLength = lData.length * 1.5f;
+            m.minLength = lData.length * minMult;
+            m.maxLength = lData.length * maxMult;
             m.springForce = BuilderSettingsManager.Instance.muscleStrength; // muscle strength
             m.damping = 10f; // stop jitter
 

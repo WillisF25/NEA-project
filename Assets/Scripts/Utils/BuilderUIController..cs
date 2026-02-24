@@ -2,20 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-public class QuitHandler : MonoBehaviour
-{
-    public void ExitApplication()
-    {
-        // only works in the actual .exe build
-        Application.Quit();
-
-        // testing in unity editor
-        #if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        #endif
-    }
-}
-
 public class BuilderUIController : MonoBehaviour
 {
     [Header("NEAT Settings")]
@@ -47,6 +33,10 @@ public class BuilderUIController : MonoBehaviour
     [Header("Muscle Settings")]
     public Slider strengthSlider;
     public TMP_Text strengthText;
+    public Slider minLenSlider;
+    public TMP_Text minLenText;
+    public Slider maxLenSlider;
+    public TMP_Text maxLenText;
 
     void Start()
     {
@@ -62,6 +52,8 @@ public class BuilderUIController : MonoBehaviour
         timeScaleSlider.value = BuilderSettingsManager.Instance.timeScale;
         oscFreqSlider.value = BuilderSettingsManager.Instance.oscillatorFreq;
 
+        minLenSlider.value = BuilderSettingsManager.Instance.minLenMultiplier;
+        maxLenSlider.value = BuilderSettingsManager.Instance.maxLenMultiplier;
         strengthSlider.value = BuilderSettingsManager.Instance.muscleStrength;
 
         // init label update
@@ -127,6 +119,18 @@ public class BuilderUIController : MonoBehaviour
         strengthText.text = val.ToString("F0");
     }
 
+    public void OnMinLenChanged(float val)
+    {
+        BuilderSettingsManager.Instance.minLenMultiplier = val;
+        minLenText.text = val.ToString("F2") + "x";
+    }
+
+    public void OnMaxLenChanged(float val)
+    {
+        BuilderSettingsManager.Instance.maxLenMultiplier = val;
+        maxLenText.text = val.ToString("F2") + "x";
+    }
+
     void UpdateAllLabels()
     {
         // refresh all labels
@@ -139,5 +143,20 @@ public class BuilderUIController : MonoBehaviour
         OnTimeLimitChanged(timeLimitSlider.value);
         OnTimeScaleChanged(timeScaleSlider.value);
         OnOscFreqChanged(oscFreqSlider.value);
+
+        OnMuscleStrengthChanged(strengthSlider.value);
+        OnMinLenChanged(minLenSlider.value);
+        OnMaxLenChanged(maxLenSlider.value);
+    }
+
+        public void ExitApplication()
+    {
+        // only works in the actual .exe build
+        Application.Quit();
+
+        // testing in unity editor
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
     }
 }
