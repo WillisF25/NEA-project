@@ -16,6 +16,9 @@ public class BuilderSettingsManager : MonoBehaviour
     public float timeScale = 1.0f;
     public float oscillatorFreq = 2.0f;
 
+    [Header("Muscle Physics")]
+    public float muscleStrength = 100f;
+
     void Awake()
     {
         // singleton pattern to keep settings accessible

@@ -30,6 +30,10 @@ public class BuilderUIController : MonoBehaviour
     public Slider oscFreqSlider;
     public TMP_Text oscFreqText;
 
+    [Header("Muscle Settings")]
+    public Slider strengthSlider;
+    public TMP_Text strengthText;
+
     void Start()
     {
         // set Sliders to match the current values in BuilderSettingsManager
@@ -43,6 +47,8 @@ public class BuilderUIController : MonoBehaviour
         timeLimitSlider.value = BuilderSettingsManager.Instance.generationTimeLimit;
         timeScaleSlider.value = BuilderSettingsManager.Instance.timeScale;
         oscFreqSlider.value = BuilderSettingsManager.Instance.oscillatorFreq;
+
+        strengthSlider.value = BuilderSettingsManager.Instance.muscleStrength;
 
         // init label update
         UpdateAllLabels();
@@ -98,6 +104,13 @@ public class BuilderUIController : MonoBehaviour
     {
         BuilderSettingsManager.Instance.oscillatorFreq = val;
         oscFreqText.text = val.ToString("F1") + "Hz";
+    }
+
+    // muscle funcions
+    public void OnMuscleStrengthChanged(float val)
+    {
+        BuilderSettingsManager.Instance.muscleStrength = val;
+        strengthText.text = val.ToString("F0");
     }
 
     void UpdateAllLabels()

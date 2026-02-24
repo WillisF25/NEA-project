@@ -223,7 +223,7 @@ public class SimulationManager : MonoBehaviour
             // use saved length form json
             m.minLength = lData.length * 0.5f;
             m.maxLength = lData.length * 1.5f;
-            m.springForce = 100f; // muscle strength
+            m.springForce = BuilderSettingsManager.Instance.muscleStrength; // muscle strength
             m.damping = 10f; // stop jitter
 
             return m; // return muscle so it can be added to nn controller list
