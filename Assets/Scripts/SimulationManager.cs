@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using TMPro;
 
 public class SimulationManager : MonoBehaviour
-{
+{   
+    [Header("Prefabs")]
     public GameObject jointPrefab;
     public GameObject linkPrefab;
+    public Transform recordFlag; 
 
     // where the json loads to and holds the data for the structure
     private CreatureData data;
@@ -21,6 +23,9 @@ public class SimulationManager : MonoBehaviour
     public CameraMode currentCameraMode = CameraMode.HighlightBest; // default to highlight best
     public static Transform focusTarget; 
     private CreatureFollower[] activeCreatures;
+
+    // track how far creatures have ever gotten
+    private float allTimeHigh = 0f;
 
 
     void Start()
@@ -47,6 +52,13 @@ public class SimulationManager : MonoBehaviour
         // initialise gen 0
         neatSystem.InitialisePopulation(jointCount, muscleCount);
 
+        // 1. SPAWN THE FLAG AT THE START
+        if (recordFlag != null)
+        {
+            Transform flagObj = Instantiate(recordFlag, new Vector3(0, 0, 0), Quaternion.identity);
+            recordFlag = flagObj.transform;
+        }
+
         // start gen 0
         SpawnPopulation();
         globalTimer = generationTimeLimit;
@@ -63,8 +75,9 @@ public class SimulationManager : MonoBehaviour
             AdvanceGeneration();
         }
 
-        UpdateTimerUI();
         UpdateCamreaTarget();
+        UpdateRecordVisuals();
+        UpdateTimerUI();
     }
 
     void SpawnPopulation()
@@ -274,6 +287,33 @@ public class SimulationManager : MonoBehaviour
                 case CameraMode.HighlightBest:
                     creature.SetVisibility(isBest ? 1.0f : 0.2f); // fade others
                     break;
+            }
+        }
+    }
+
+    // update the marker showing the all time high
+    void UpdateRecordVisuals()
+    {
+        float currentMaxFitness = -float.MaxValue;
+
+        // find the current best distance in this gen
+        foreach (CreatureFollower creature in activeCreatures)
+        {
+            if (creature != null && creature.currentFitness > currentMaxFitness)
+            {
+                currentMaxFitness = creature.currentFitness;
+            }
+        }
+
+        // if we just broke the all time record, move the flag
+        if (currentMaxFitness > allTimeHigh)
+        {
+            allTimeHigh = currentMaxFitness;
+            
+            if (recordFlag != null)
+            {
+                // move the flag to the new x pos
+                recordFlag.position = new Vector3(allTimeHigh, recordFlag.position.y, 0);
             }
         }
     }
