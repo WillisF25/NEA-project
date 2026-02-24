@@ -234,10 +234,15 @@ public class CreatureBuilder : MonoBehaviour
     }
 
     public void SaveCreature()
-    {
+    {   
+        if (currentStructure.joints.Count <= 0)
+        {
+            Debug.LogWarning("Can't save empty structure.");
+            return;
+        }
+
         // create the container
         CreatureData data = new CreatureData();
-
 
         // map the gameobj to its id for links later
         foreach (Joint j in currentStructure.joints)

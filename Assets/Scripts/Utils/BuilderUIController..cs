@@ -2,6 +2,20 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+public class QuitHandler : MonoBehaviour
+{
+    public void ExitApplication()
+    {
+        // only works in the actual .exe build
+        Application.Quit();
+
+        // testing in unity editor
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
+    }
+}
+
 public class BuilderUIController : MonoBehaviour
 {
     [Header("NEAT Settings")]
