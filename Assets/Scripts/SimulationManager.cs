@@ -49,10 +49,22 @@ public class SimulationManager : MonoBehaviour
         // initialise NEAT
         neatSystem.generationNumber = 0;
 
+        // check if the builder settings exist
+        if (BuilderSettingsManager.Instance != null)
+        {
+            // pass UI settings to obj
+            neatSystem.mutateWeightRate = BuilderSettingsManager.Instance.mutateWeightRate;
+            neatSystem.addNodeRate = BuilderSettingsManager.Instance.addNodeRate;
+            neatSystem.addConnectionRate = BuilderSettingsManager.Instance.addConnectionRate;
+            neatSystem.compatibilityThreshold = BuilderSettingsManager.Instance.compatibilityThreshold;
+            neatSystem.populationLimit = BuilderSettingsManager.Instance.populationLimit;
+            generationTimeLimit = BuilderSettingsManager.Instance.generationTimeLimit;
+        }
+
         // initialise gen 0
         neatSystem.InitialisePopulation(jointCount, muscleCount);
 
-        // 1. SPAWN THE FLAG AT THE START
+        // spawn the flag at start
         if (recordFlag != null)
         {
             Transform flagObj = Instantiate(recordFlag, new Vector3(0, 0, 0), Quaternion.identity);
@@ -66,15 +78,19 @@ public class SimulationManager : MonoBehaviour
     }
 
     void Update()
-    {
-        // timer
-        globalTimer -= Time.deltaTime;
+    {   
+        // Apply the Time Scale from the slider to the actual physics engine
+        if (BuilderSettingsManager.Instance != null)
+        {
+            Time.timeScale = BuilderSettingsManager.Instance.timeScale;
+            globalTimer -= Time.deltaTime;
+        }
+        else globalTimer -= Time.deltaTime;
 
         if (globalTimer <= 0)
         {
             AdvanceGeneration();
         }
-
         UpdateCamreaTarget();
         UpdateRecordVisuals();
         UpdateTimerUI();

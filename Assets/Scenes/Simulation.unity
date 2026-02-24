@@ -840,6 +840,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1468973730}
   - component: {fileID: 1468973729}
+  - component: {fileID: 1468973731}
   m_Layer: 0
   m_Name: SimulationManager
   m_TagString: Untagged
@@ -861,6 +862,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SimulationManager
   jointPrefab: {fileID: 3372261309385932719, guid: e5c682cf039c04b44bd732ab0adad53e, type: 3}
   linkPrefab: {fileID: 6310412958984888033, guid: 4d1d3aa97eb937a47a281dd3bce6ee22, type: 3}
+  recordFlag: {fileID: 8345980446980836231, guid: d889c3ad4959dc047bcd711177a88082, type: 3}
   neatSystem:
     generationNumber: 0
     populationLimit: 50
@@ -879,6 +881,7 @@ MonoBehaviour:
     c3: 3
   generationTimeLimit: 10
   timerDisplay: {fileID: 1373940527}
+  currentCameraMode: 2
 --- !u!4 &1468973730
 Transform:
   m_ObjectHideFlags: 0
@@ -894,6 +897,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1468973731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1468973728}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 630ac1268b8908f4fadb2f0e0c60050e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WorldRuler
+  markerPrefab: {fileID: 7116777007975610289, guid: 3726e16b1d9405e4e9c1013528f50926, type: 3}
+  markerInterval: 5
+  initialDistance: 100
+  floorY: -7
 --- !u!1 &1544279963
 GameObject:
   m_ObjectHideFlags: 0
