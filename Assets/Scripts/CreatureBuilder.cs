@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 
+/// <summary>
+/// The core buildr contoller. Handles user input for placing joints,
+/// connecting them with bones/muscles, saving the blueprint, and validating the structure. 
+/// </summary>
 public class CreatureBuilder : MonoBehaviour
 {   
     public enum BuildMode { Spawning, Linking }
@@ -21,6 +25,9 @@ public class CreatureBuilder : MonoBehaviour
     // to remember the fist click for a link
     private GameObject selectedJointA = null;
     
+    /// <summary>
+    /// Looks for mouse clicks every frame, ensuring the user isn't clicking on a UI button.
+    /// </summary>
     void Update()
     {   
         // check if mouse is currenlty over a ui button/panel
@@ -34,6 +41,10 @@ public class CreatureBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Converts mouse screen coordinates to world coordinates and determines if a joint was clicked.
+    /// Calles differnt functions based on the current BuildMode.
+    /// </summary>
     void HandleInput()
     {
         // get mouse pos
@@ -60,6 +71,11 @@ public class CreatureBuilder : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Instantiates a new joint object and registers it in the structure data.
+    /// </summary>
+    /// <param name="pos">The 2D world position to spawn the joint.</param>
     void SpawnJoint(Vector2 pos)
     {
         // determine id before creating data
@@ -79,6 +95,10 @@ public class CreatureBuilder : MonoBehaviour
         Debug.Log($"Spawned Joint {newID} at {pos}");
     }
 
+    /// <summary>
+    /// Handles the process of selecting joints to create a link.
+    /// </summary>
+    /// <param name="jointObj">The joint that was just clicked.</param>
     void SelectedJoint(GameObject jointObj)
     {
         // case 1: deselecting
@@ -102,6 +122,10 @@ public class CreatureBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Creates a visual and physical connection (Bone / Muscle) between two joints.
+    /// Handles duplicate/override checks.
+    /// </summary>
     void CreateLink (GameObject a, GameObject b)
     {   
         if (a == b) return;
@@ -182,6 +206,9 @@ public class CreatureBuilder : MonoBehaviour
         a.GetComponent<SpriteRenderer>().color = Color.white;
         selectedJointA = null;
     }
+    /// <summary>
+    /// Removes the physics and visual components of a specific link from the scene.
+    /// </summary>
     void RemoveLink(GameObject a, GameObject b, Link link)
     {
         // find and destroy the the visual gameobj
@@ -218,6 +245,9 @@ public class CreatureBuilder : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Wipes the board clean, destroying all physical objects and resetting internal data.
+    /// </summary>
     public void ClearAll()
     {   
         foreach (var pair in jointMap) Destroy(pair.Key); // destroy all joint gameobjs
@@ -233,6 +263,9 @@ public class CreatureBuilder : MonoBehaviour
         jointMap.Clear(); // clear the joint map
     }
 
+    /// <summary>
+    /// Packages the current structure into DTOs and passes it to the SaveLoadManager.
+    /// </summary>
     public void SaveCreature()
     {   
         if (currentStructure.joints.Count <= 0)
@@ -270,6 +303,9 @@ public class CreatureBuilder : MonoBehaviour
         SaveLoadManager.SaveCreatureStructure(data, "creature.json");
     }
 
+    /// <summary>
+    /// Fetches saved JSON data and reconstructs the creature in the editor.
+    /// </summary>
     public void LoadCreature()
     {
         // ask manager for the data
@@ -311,13 +347,12 @@ public class CreatureBuilder : MonoBehaviour
         }
     }
         
-    
+    /// <summary> Calls the manager to delete the saved JSON file. </summary>
+    public void DeleteSaveFile() => SaveLoadManager.DeleteSaveFile("creature.json");
 
-    public void DeleteSaveFile()
-    {
-        SaveLoadManager.DeleteSaveFile("creature.json");
-    }
-
+    /// <summary>
+    /// Checks for valid design rules, saves the creature, and switches to the Simulation scene.
+    /// </summary>
     public void StartSimulation()
     {
         // Muscle presence check
@@ -355,7 +390,10 @@ public class CreatureBuilder : MonoBehaviour
         SceneManager.LoadScene("Simulation");
     }
 
-        public void ToggleSimulation()
+    /// <summary>
+    /// Toggles Gravity and Physics on/off inside the editor so the user can test their structure's stability.
+    /// </summary>
+    public void ToggleSimulation()
     {
         isSimulating = !isSimulating; // toggle
 
@@ -383,7 +421,14 @@ public class CreatureBuilder : MonoBehaviour
         }
     }
 
-        public bool ValidateStructure (Structure structure, out List<Joint> isolatedJoints)
+    /// <summary>
+    /// Ensures all joints are connected in a single contiguous network.
+    /// Uses a Breadth-First Search (BFS) graph traversal algorithm.
+    /// </summary>
+    /// <param name="structure">The data to check.</param>
+    /// <param name="isolatedJoints">Outputs any joints that couldn't be reached by the search.</param>
+    /// <returns>True if the structure is whole, false if it is broken into islands.</returns>
+    public bool ValidateStructure (Structure structure, out List<Joint> isolatedJoints)
     {
         isolatedJoints = new List<Joint>();
 
@@ -431,9 +476,13 @@ public class CreatureBuilder : MonoBehaviour
     }
     
     // UI button connectors
+    /// <summary> Sets the builder to click-to-spawn mode. </summary>
     public void SetModeSpawning() => currentMode = BuildMode.Spawning;
+    /// <summary> Sets the builder to click-to-connect mode. </summary>
     public void SetModeLinking() => currentMode = BuildMode.Linking;
-
+    
+    /// <summary> Future links will be rigid Bones. </summary>
     public void SetTypeBone() => currentLinkType = LinkType.Bone;
+    /// <summary> Future links will be flexible Muscles. </summary>
     public void SetTypeMuscle() => currentLinkType = LinkType.Muscle;
 }

@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// Updates the LinkRenderer visuals to stay aligned with the physcial joints.
+/// </summary>
 public class LinkFollower : MonoBehaviour 
 {
     // the two joints
@@ -8,11 +11,19 @@ public class LinkFollower : MonoBehaviour
     
     private LineRenderer lr;
 
+    /// <summary>
+    /// Casches the LineRenderer component in the same GameObject.
+    /// </summary>
     void Awake() 
     { 
         lr = GetComponent<LineRenderer>(); 
     }
 
+    /// <summary>
+    /// Assigns the physcial Transforms the line should track and forces an immediate visual update.
+    /// </summary>
+    /// <param name="start">The Transform of the source joint.</param>
+    /// <param name="end">The Transform of the target joint.</param>
     public void SetTargets(Transform start, Transform end)
     {
         startObj = start;
@@ -26,6 +37,10 @@ public class LinkFollower : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Monitors if the joints still exitst and updates the line positions every frame.
+    /// If a joint is destroyed, this visual object cleans itself to prevent memory leaks.
+    /// </summary>
     void Update() 
     {
         // if joint deleted, delete link

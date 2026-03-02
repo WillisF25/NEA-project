@@ -1,7 +1,11 @@
 using UnityEngine;
 using System.Collections.Generic;
-using UnityEngine.InputSystem;
 
+/// <summary>
+/// The controller for an individual creature instance.
+/// Acts as the interface between the Neural Network and the physics components (brain and body).
+/// Tracks fitness and handles visual rendering states.
+/// </summary>
 public class CreatureFollower : MonoBehaviour
 {
     private NeuralNetwork network;
@@ -22,6 +26,13 @@ public class CreatureFollower : MonoBehaviour
     // camera use
     private List<LineRenderer> creatureLines = new List<LineRenderer>();
 
+    /// <summary>
+    /// Initialises the creature's brain and links it to its physical parts.
+    /// </summary>
+    /// <param name="genome">The gentic blueprint for the neural network.</param>
+    /// <param name="creatureMuscles">List of Muscle components to be controlled.</param>
+    /// <param name="creatureJoints">List of Joint transforms used as sensors.</param>
+    /// <param name="lines">List of LineRenderers for visual fading logic.</param>
     public void Init(Genome genome, List<Muscle> creatureMuscles, List<Transform> creatureJoints, List<LineRenderer> lines)
     {
         network = new NeuralNetwork(genome);
@@ -36,12 +47,19 @@ public class CreatureFollower : MonoBehaviour
         creatureLines = lines;
     }
 
-        void Update()
+    /// <summary>
+    /// Updates the fitness score every frame based on the furthest distance reached.
+    /// </summary>
+    void Update()
     {   
         UpdateMaxDistance();
         currentFitness = maxDistance;
     }
 
+    /// <summary>
+    /// Scans all joints to find which one is furthest along the x-axis.
+    /// Updates the record holding joint for camera tracking.
+    /// </summary>
     public void UpdateMaxDistance()
     {
                 foreach (Transform j in joints)
@@ -55,6 +73,15 @@ public class CreatureFollower : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Handles the "thinking" process. Gathers environment data, runs it through 
+    /// the network, and then applies the resulting forces to the muscles.
+    /// </summary>
+    /// <remarks>
+    /// Inputs: 
+    /// 0: Global Sine Oscillator (Time-based rhythmic input).
+    /// 1 to n: Local y-position (height) of each joint.
+    /// </remarks>
     void FixedUpdate() // FixedUpdate for physcis consistency
     {
         if (network == null) return;
@@ -83,13 +110,21 @@ public class CreatureFollower : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Returns the highest x-coordinate reached by this creature during its lifespan.
+    /// </summary>
+    /// <returns>A float representing the fitness score.</returns>
     public float GetFinalFitness()
     {   
         // return the fitness score at the end of the generation
         return currentFitness;
     }
 
-    // camera logic for unrendering creatures
+    /// <summary>
+    /// Adjusts the transparency of the creature's sprites and lines.
+    /// Used by the SimulationManager to focus on the best creature.
+    /// </summary>
+    /// <param name="alpha">The transparency level (0.0 to 1.0).</param>
     public void SetVisibility (float alpha)
     {   
         // update Joints

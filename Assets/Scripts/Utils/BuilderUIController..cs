@@ -2,6 +2,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Controls the Builder Scene UI. 
+/// Synchronises the visual Sliders/Text with the global Settings Manager.
+/// </summary>
 public class BuilderUIController : MonoBehaviour
 {
     [Header("NEAT Settings")]
@@ -38,6 +42,10 @@ public class BuilderUIController : MonoBehaviour
     public Slider maxLenSlider;
     public TMP_Text maxLenText;
 
+    /// <summary>
+    /// On startup, force all UI sliders to match the current saved settings.
+    /// This prevents the UI from showing '0' instead of the default or setted values.
+    /// </summary>
     void Start()
     {
         // set Sliders to match the current values in BuilderSettingsManager
@@ -60,7 +68,10 @@ public class BuilderUIController : MonoBehaviour
         UpdateAllLabels();
     }
 
-    // neat functions
+    // UI callback funcitons
+    // triggerd by "On Value Chnaed" event in the Inspector.
+
+    // neat funcitons
     public void OnWeightMutateChanged(float val)
     {
         BuilderSettingsManager.Instance.mutateWeightRate = val;
@@ -131,6 +142,9 @@ public class BuilderUIController : MonoBehaviour
         maxLenText.text = val.ToString("F2") + "x";
     }
 
+    /// <summary>
+    /// Forces a refresh of every label in the UI. 
+    /// </summary>
     void UpdateAllLabels()
     {
         // refresh all labels
@@ -149,7 +163,10 @@ public class BuilderUIController : MonoBehaviour
         OnMaxLenChanged(maxLenSlider.value);
     }
 
-        public void ExitApplication()
+    /// <summary>
+    /// Closes the game.
+    /// </summary>
+    public void ExitApplication()
     {
         // only works in the actual .exe build
         Application.Quit();

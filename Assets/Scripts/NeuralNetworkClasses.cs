@@ -2,6 +2,11 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// The phenotype of the brain.
+/// Translates a Genome inot a functional graph of nodes and connecitons.
+/// Handles signal propagation and topological sorting to ensure correct calculation order.
+/// </summary>
 public class NeuralNetwork {
     private List<Node> nodes = new List<Node>();
     private List<Node> inputNodes = new List<Node>();
@@ -11,6 +16,10 @@ public class NeuralNetwork {
     // reusable output buffer
     private float[] outputBuffer;
 
+    /// <summary>
+    /// Constructs a physcial neural network form a genetic blueprint (Genome).
+    /// </summary>
+    /// <param name="genome">The source genome containing node and connection genes.</param>
     public NeuralNetwork(Genome genome) {
         // CREATE NODES
         // a temp dict to find Node obj using its id
@@ -64,6 +73,12 @@ public class NeuralNetwork {
         outputBuffer = new float[outputNodes.Count];
     }
 
+    /// <summary>
+    /// Processes input data through the network to produce muscle control signals.
+    /// </summary>
+    /// <param name="inputs">An array of sensor data (joint heights, oscillators)</param>
+    /// <returns>An array of output values for muscle contraction/extensionn. 
+    /// Retruns null of input size mismatch.</returns>
     public float[] ForwardPass(float[] inputs) 
     { 
         // ensure num of sensors on the creature matches with num of input neurons
@@ -98,6 +113,11 @@ public class NeuralNetwork {
         return outputBuffer;
     }
 
+    /// <summary>
+    /// Orders the nodes based on their dependency on one another.
+    /// This ensures that a node's inputs are calculated before its own ouput is generated,
+    /// preventing "lag/waiting" in the signal propagation.
+    /// </summary>
     public void SortTopology()
     {
         // reset depths
@@ -153,7 +173,9 @@ public class NeuralNetwork {
     }
 }
 
-// Phenotype components
+/// <summary>
+/// Represents a single neuron that sums incoming signals and appies an activation function.
+/// </summary>
 public class Node {
     private int nodeID;
     private string nodeType;
@@ -177,6 +199,10 @@ public class Node {
     // store refs to conns feeding into this node
     public List<Connection> IncomingConnections = new List<Connection>();
 
+    /// <summary>
+    /// The constructor for Node class.
+    /// </summary>
+    /// <param name="gene">The genetic data/bluprint of this node.</param>
     public Node(NodeGene gene) 
     {
         this.nodeID = gene.innovationID;
@@ -189,6 +215,13 @@ public class Node {
         this.activationFunctionPtr = GetActivation(gene.activation);
     }
 
+    /// <summary>
+    /// Sums all incoming connections signals plus the node's bias,
+    /// the runs the result through the activation funcion.
+    /// </summary>
+    /// <remarks>The formula used is: 
+    /// $Output = Activation( \sum(Input \cdot Weight) + Bias )$
+    /// </remarks>
     public void Calculate()
     {   // start with the defined bias
         float sum = bias;
@@ -206,7 +239,11 @@ public class Node {
         output = activationFunctionPtr(inputSum);
     }
 
-    // helper to resolve delegates
+    /// <summary>
+    /// Maps a sting name form the Genome to a specific mathematical activaiton delegate.
+    /// </summary>
+    /// <param name="name">The name of the function (e.g. "sigmoid", "relu", "linear")</param>
+    /// <returns></returns>
     private ActivationFunction GetActivation(string name) 
     {
         switch (name.ToLower()) {
@@ -218,6 +255,9 @@ public class Node {
     }
 }
 
+/// <summary>
+/// A weighted conneciton/edge of a graph bewteen two nodes that carries a signal.
+/// </summary>
 public class Connection {
     // refs to node objs
     private Node inputNode;

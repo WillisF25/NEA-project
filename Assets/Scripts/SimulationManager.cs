@@ -2,11 +2,18 @@ using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
 
+/// <summary>
+/// Manages the evolutionary simulaiton.
+/// Handles creature spawning, generaion timing, NEAT evolution cycles, and camrea tracking.
+/// </summary>
 public class SimulationManager : MonoBehaviour
 {   
     [Header("Prefabs")]
+    [Tooltip("The base object for joint physics")]
     public GameObject jointPrefab;
+    [Tooltip("The visual and logic container for connections")]
     public GameObject linkPrefab;
+    [Tooltip("The object to track the all time high visually")]
     public Transform recordFlag; 
 
     [Header("UI References")]
@@ -23,7 +30,6 @@ public class SimulationManager : MonoBehaviour
     public float generationTimeLimit;
     private float globalTimer;
 
-    
     // camera variables
     public enum CameraMode { ShowAll, ShowBestOnly, HighlightBest }
     public CameraMode currentCameraMode = CameraMode.HighlightBest; // default to highlight best
@@ -33,7 +39,10 @@ public class SimulationManager : MonoBehaviour
     // track how far creatures have ever gotten
     private float allTimeHigh = 0f;
 
-
+    /// <summary>
+    /// Loads the creature blueprint, initialises the NEAT system with 
+    /// settings form the Builder, and spawns the initial populaion.
+    /// </summary>
     void Start()
     {   
         // load the structure blueprint
@@ -93,6 +102,10 @@ public class SimulationManager : MonoBehaviour
         Debug.Log($"Started Generation {neatSystem.generationNumber}");
     }
 
+    /// <summary>
+    /// Triggers the evolautoin cycle once the time limit is reached,
+    /// updates UI visuals and settings based on UI change.
+    /// </summary>
     void Update()
     {   
         // apply the time scale from the slider to the actual physics engine
@@ -107,11 +120,16 @@ public class SimulationManager : MonoBehaviour
         {
             AdvanceGeneration();
         }
-        UpdatecameraTarget();
+
+        UpdateCameraTarget();
         UpdateRecordVisuals();
         UpdateTimerUI();
     }
 
+    /// <summary>
+    /// Iterates through the current NEAT population and instantiates
+    /// each genome as a physical creature in the scene.
+    /// </summary>
     void SpawnPopulation()
     {
         foreach (Genome g in neatSystem.population)
@@ -122,6 +140,12 @@ public class SimulationManager : MonoBehaviour
         activeCreatures = FindObjectsByType<CreatureFollower>(FindObjectsSortMode.None);
     }
 
+    /// <summary>
+    /// Performs the evolutionary steps:
+    /// evaluates fitness based on performance,
+    /// runs crossover/mutation through NEAT, 
+    /// and resets the scene for the new generation.
+    /// </summary>
     void AdvanceGeneration()
     {
         // evaluate
@@ -154,6 +178,10 @@ public class SimulationManager : MonoBehaviour
         Debug.Log($"Started Generation {neatSystem.generationNumber}");
     }
 
+    /// <summary>
+    /// Translates a NEAT genome into a Unity hierarchy of joints and bones/muscles in the scene.
+    /// </summary>
+    /// <param name="genome">The neural network data for this specific creature.</param>
     void AssembleCreature(Genome genome)
     {
         // list to hold brain refs
@@ -199,6 +227,14 @@ public class SimulationManager : MonoBehaviour
         follower.Init(genome, spawnedMuscles, spawnedJoints, spawnedLines);
     }
 
+    /// <summary>
+    /// Creates a physcial conneciton (Muscle or Bone) between two joints.
+    /// </summary>
+    /// <param name="a">The source joint GameObject.</param>
+    /// <param name="b">The Target joint GameObject</param>
+    /// <param name="lData">The blueprint data defining length and type</param>
+    /// <param name="spawnedLines">A list to store the LineRenderer for visual updates.</param>
+    /// <returns>Returns a Muscle component if the link is a muscle, else returns null.</returns>
     Muscle CreatePhysicalLink(GameObject a, GameObject b, LinkData lData, List<LineRenderer> spawnedLines)
     {
         // visuals 
@@ -255,13 +291,18 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
-        public void BackToBuilder()
-        {
-            // load builder scene
-            UnityEngine.SceneManagement.SceneManager.LoadScene("CreatureBuilder");
-        }
+    /// <summary>
+    /// Switches the scene from Simulaion to CreatureBuilder.
+    /// </summary>
+    public void BackToBuilder()
+    {
+        // load builder scene
+        UnityEngine.SceneManagement.SceneManager.LoadScene("CreatureBuilder");
+    }
 
-    // timer ui
+    /// <summary>
+    /// Formats the remaining simulation time inot a MM:SS string for the
+    /// </summary>
     void UpdateTimerUI()
     {
         // formatting: "00:00"
@@ -274,8 +315,11 @@ public class SimulationManager : MonoBehaviour
         timerDisplay.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
-    // camera logic
-    void UpdatecameraTarget()
+    /// <summary>
+    /// Finds the creature with the highest fitness and adjusts the
+    /// camera focus and visibility modes accordingly.
+    /// </summary>
+    void UpdateCameraTarget()
     {
         if (activeCreatures == null || activeCreatures.Length == 0) return;
 
@@ -327,6 +371,10 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Cycles though ShowAll, ShowBestOnly, and HighlightBest
+    /// visibility modes.
+    /// </summary>
     public void CycleCameraMode()
     {
         // cycle through the enum
@@ -342,7 +390,10 @@ public class SimulationManager : MonoBehaviour
         Debug.Log("Camera Mode switched to: " + currentCameraMode);
     }
 
-    // update the marker showing the all time high
+    /// <summary>
+    /// Tracks the furthest distance any creature has ever reached and
+    /// moves the physcial "recordFlag" to that posisiton.
+    /// </summary>
     void UpdateRecordVisuals()
     {
         float currentMaxFitness = -float.MaxValue;
@@ -369,6 +420,10 @@ public class SimulationManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Adjusts the global physics speed based on UI slider input.
+    /// </summary>
+    /// <param name="newValue">The new value for Time.timeScale</param>
     public void OnTimeScaleSliderChanged(float newValue)
     {
         // update the saved setting in the background
@@ -386,12 +441,15 @@ public class SimulationManager : MonoBehaviour
         Time.timeScale = newValue;
     }
 
+    /// <summary>
+    /// Quits the application.
+    /// </summary>
     public void QuitGame()
-{
-    Application.Quit();
+    {
+        Application.Quit();
 
-    #if UNITY_EDITOR
-    UnityEditor.EditorApplication.isPlaying = false;
-    #endif
-}
+        #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        #endif
+    }
 }

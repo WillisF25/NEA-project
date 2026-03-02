@@ -1,5 +1,10 @@
 using UnityEngine;
 
+/// <summary>
+/// A physics based component that acts as a lienar acuator between two rigidbodies.
+/// Uses Hooke's Law with damping to simulate muscular contraction and expansion,
+/// based on neural network signals.
+/// </summary>
 public class Muscle : MonoBehaviour
 {
     public Rigidbody2D rbA;
@@ -12,13 +17,19 @@ public class Muscle : MonoBehaviour
 
     private float targetLength;
 
+    /// <summary>
+    /// Sets the initial resting target length of the muscle to the mdipoint of its range.
+    /// </summary>
     void Start()
     {
         // default to resting state (mid of min and max)
         targetLength = (minLength + maxLength) / 2;
     }
 
-    // called by CreatrueFollower.cs, value is form -1 to 1
+    /// <summary>
+    /// Maps a normalised signal to a physical target length.
+    /// </summary>
+    /// <param name="value">A signal form -1.0 (fully contracted) to 1.0 (fully extended).</param>
     public void SetMuscleExtension(float value)
     {
         if (rbA == null || rbB == null) return;
@@ -28,6 +39,15 @@ public class Muscle : MonoBehaviour
         targetLength = Mathf.Lerp(minLength, maxLength, t);
     }
 
+    /// <summary>
+    /// Calculates and applies spring and damping forces to the connected rigidbodies.
+    /// </summary>
+    /// <remarks>
+    /// Uses a damped harmonic oscillator formula:
+    /// $F = (-k \cdot x) - (c \cdot v)$
+    /// Where $k$ is the springForce, $x$ is displacement from targetLength,
+    /// $c$ is damping, and $v$ is relative velocity.
+    /// </remarks>
     void FixedUpdate()
     {
         if (rbA == null || rbB == null) return;
