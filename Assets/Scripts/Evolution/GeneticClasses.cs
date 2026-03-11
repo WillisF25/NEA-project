@@ -1,6 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Container for a creature's genetic information.
+/// Acts as the blueprint for the Neural Network topology.
+/// </summary>
 [System.Serializable]
 public class Genome {
     public int genomeID;
@@ -13,6 +17,11 @@ public class Genome {
         this.genomeID = genomeID;
     }
 
+    /// <summary>
+    /// Master mutation funciton that decides for structural or weight changes.
+    /// </summary>
+    /// <param name="innovation">The global tracker for innovation.</param>
+    /// <param name="settings">The NEAT settings continaing mutation weights and steps.</param>
     public void Mutate(Innovation innovation, NEAT settings)
     {
         // mutate weights
@@ -33,6 +42,11 @@ public class Genome {
             AddNode(innovation);
         }
     }
+
+    /// <summary>
+    /// Iterates through connection weights and applies either a small nudge (perturb) or a total reset.
+    /// </summary>
+    /// <param name="step">The maximum range for weight perturbation.</param>
     public void MutateWeights(float step)
     {
         foreach (ConnectionGene conn in connections)
@@ -49,6 +63,10 @@ public class Genome {
         }
     }
     
+    /// <summary>
+    /// Adds a new connection between two nodes.
+    /// </summary>
+    /// <param name="innovation">The global tracker for innovation.</param>
     public void AddConnection(Innovation innovation)
     {
         // separate nodes inot potential sources and potential targets
@@ -84,6 +102,12 @@ public class Genome {
             return;
         }
     }
+    /// <summary>
+    /// Checks if a conneciton already exists between two specific nodes to avoid duplicate connections.
+    /// </summary>
+    /// <param name="node1">Innnovation ID of source node.</param>
+    /// <param name="node2">Innovation ID of target node.</param>
+    /// <returns></returns>
     private bool ConnectionExists(int node1, int node2)
     {
         foreach (var conn in connections)
@@ -93,6 +117,11 @@ public class Genome {
         return false;
     }
 
+    /// <summary>
+    /// Splits a connection to insert a new hidden node.
+    /// Allowing the network to grow in complexity.
+    /// </summary>
+    /// <param name="innovation">The global tracker for Innovation ID</param>
     public void AddNode(Innovation innovation)
     {
         // filter for only enabled connections
@@ -127,6 +156,13 @@ public class Genome {
         connections.Add(link2);
     }
 
+    /// <summary>
+    /// Sexual reproduction logic. Inherits mathcing genes from both parent,
+    /// and non mathcing genes form the fitter parent.
+    /// </summary>
+    /// <param name="partner">The other genome to mate with.</param>
+    /// <param name="newID">ID of the resulting offspring.</param>
+    /// <returns>The Genome of the resulting offspring.</returns>
     public Genome Crossover(Genome partner, int newID) // pass in unique id
     {
         // determine relative fitness
@@ -207,6 +243,15 @@ public class Genome {
         return child;
     }
 
+    /// <summary>
+    /// Calculates a rating of how similar two networks/genomes are.
+    /// Used to determine if they are in the same specie.
+    /// </summary>
+    /// <param name="partner">The genome to compare against.</param>
+    /// <param name="c1">Excess gene coeffcient.</param>
+    /// <param name="c2">Disjoint gene coeffcient.</param>
+    /// <param name="c3">Weight difference coeffcient.</param>
+    /// <returns>Float value representing topological and weight difference.</returns>
     public float GetCompatibilityDistance(Genome partner, float c1, float c2, float c3)
     {
         int matching = 0;
@@ -261,6 +306,10 @@ public class Genome {
         return (c1 * excess / n) + (c2 * disjoint / n) + (c3 * avgWeightDiff);
     }
 
+    /// <summary>
+    /// Creates a copy of the genome to ensure mutation of a child does not affect the parent.
+    /// </summary>
+    /// <returns>The cloned Genome.</returns>
     public Genome Clone()
     {
         Genome clone = new Genome(this.genomeID);
@@ -270,6 +319,9 @@ public class Genome {
     }
 }
 
+/// <summary>
+/// Genetic data representing a node in the neural network.
+/// </summary>
 [System.Serializable]
 public class NodeGene {
     public int innovationID;
@@ -286,6 +338,9 @@ public class NodeGene {
     }
 }
 
+/// <summary>
+/// Genetic data representing a connection in the neural network.
+/// </summary>
 [System.Serializable]
 public class ConnectionGene {
     public int innovationID;

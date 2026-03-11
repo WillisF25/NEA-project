@@ -1,6 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// The master NEAT algorithm handler. 
+/// Handles fitness evaluation, speciation, and reproduction.
+/// </summary>
 [System.Serializable]
 public class NEAT {
     public int generationNumber;
@@ -26,7 +30,11 @@ public class NEAT {
     private int globalSpecieIDCounter = 0;
     private int globalGenomeIDCounter = 0;
 
-    // called once to generate generation 0
+    /// <summary>
+    /// Sets up generation 0 with neural networks of minimal topology.
+    /// </summary>
+    /// <param name="jointCount">Number of sensors.</param>
+    /// <param name="muscleCount">Number of output actuators.</param>
     public void InitialisePopulation(int jointCount, int muscleCount)
     {
         globalInnovationTracker = new Innovation();
@@ -46,6 +54,12 @@ public class NEAT {
         Speciate();
     }
 
+    /// <summary>
+    /// Constructs a basec neural network with minimal connecitons for a new creature.
+    /// </summary>
+    /// <param name="jointCount">Sensor count.</param>
+    /// <param name="muscleCount">Actuator count.</param>
+    /// <returns>Simple, funcitional starting genome.</returns>
     private Genome CreateInitialGenome(int jointCount, int muscleCount)
     {
         Genome g = new Genome(globalGenomeIDCounter++);
@@ -86,7 +100,11 @@ public class NEAT {
 
         return g;
     }
-        
+    
+    /// <summary>
+    /// Pulls performance data from simulation into the genetic data.
+    /// </summary>
+    /// <param name="followers">Array of creature trackers containing the displacment data of the creature.</param>
     public void EvaluateFitness(CreatureFollower[] followers)
     {
         // map performce back to genetic data
@@ -103,6 +121,10 @@ public class NEAT {
         }
     }
     
+    /// <summary>
+    /// Implements Fitness Sharing. Reduces the fitness of creatures that are too similar to ensure diversity.
+    /// Uses the formula: $f'_i = \frac{f_i}{\sum sh(d(i,j))}$
+    /// </summary>
     public void AdjustFitness()
     {
         foreach (Specie s in species)
@@ -141,6 +163,9 @@ public class NEAT {
         }
     }
 
+    /// <summary>
+    /// Groups the populaiton into species based on topological/compatibility distance to preserve innovation.
+    /// </summary>
     public void Speciate()
     {
         // clear mmebers from all species, but keep the representatives
@@ -185,6 +210,9 @@ public class NEAT {
         }
     }
 
+    /// <summary>
+    /// Generates the next generation through elitism and selective breeding.
+    /// </summary>
     public void Reproduce()
     {
         List<Genome> newPopulation = new List<Genome>();
@@ -275,6 +303,9 @@ public class NEAT {
     }
 }
 
+/// <summary>
+/// A tracker that assigns unique Ids to structural changes in the neural netowork for historical tracking.
+/// </summary>
 public class Innovation {
     // increments when a unique mutation occurs
     private int innovationTracker = 0;
@@ -284,8 +315,14 @@ public class Innovation {
     // or for nodes: [string mutationType, int oldConnectionID]
     private Dictionary<int, List<object>> innovationRecords = new Dictionary<int, List<object>>();
 
-    // checks if this mutation has occured before
-    // returns the existing id if found, or new id if not
+    /// <summary>
+    /// Gets a unique ID for a connection mutation,
+    ///  or returns an existing one of this mutation has occured before.
+    /// </summary>
+    /// <param name="nodeInID">Source node ID.</param>
+    /// <param name="nodeOutID">Target node ID.</param>
+    /// <param name="mutationType">Type of mutation occuring.</param>
+    /// <returns>A unique innovation ID.</returns>
     public int GetInnovationID(int nodeInID, int nodeOutID, string mutationType) 
     {
         // loop through existing records
@@ -314,7 +351,11 @@ public class Innovation {
         return newID;
     }
 
-    // helper for splitting a connection to add a node
+    /// <summary>
+    /// Gets a unique ID for a node created by splitting a connection.
+    /// </summary>
+    /// <param name="connectionID">The ID or the connection being split.</param>
+    /// <returns>A unique node innovation ID.</returns>
     public int GetNodeInnovationNumber(int connectionID)
     {
         string type = "AddNode";
@@ -333,6 +374,10 @@ public class Innovation {
     }
 }
 
+/// <summary>
+/// Represents a group of similar genomes.
+/// Used to protect new innovations from being out competed by well established structures.
+/// </summary>
 [System.Serializable]
 public class Specie {
     public int specieID;
@@ -347,12 +392,22 @@ public class Specie {
         members.Add(firstMember);
     }
 
+    /// <summary>
+    /// Resets the specie data for a new generation,
+    /// while keeping the representative.
+    /// </summary>
     public void Reset()
     {
         members.Clear();
         totalFitness = 0;
     }
 
+    /// <summary>
+    /// Calculates how many offsprint this species is allowd based on its proportion it the total global fitness.
+    /// </summary>
+    /// <param name="globalTotalFitness">Sum of all adjusedt fitness in the population.</param>
+    /// <param name="popLimit">Maximum population size.</param>
+    /// <returns>The number of slots in the next generation.</returns>
     public int DetermineOffspringCount(float globalTotalFitness, int popLimit)
     {
         if (globalTotalFitness == 0)
@@ -365,6 +420,11 @@ public class Specie {
         return Mathf.FloorToInt(percentage * popLimit);
     }
 
+    /// <summary>
+    /// Pickes two parents from the top half of the species,
+    /// using Tournament selection.
+    /// </summary>
+    /// <returns>An array of two parent genomes.</returns>
     public Genome[] SelectParents()
     {
         // assume members list is already sorted by fitness (highest to lowest)
