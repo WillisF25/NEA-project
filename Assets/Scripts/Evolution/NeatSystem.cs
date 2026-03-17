@@ -187,6 +187,7 @@ public class NEAT {
                 if (s.representative != null && genome.GetCompatibilityDistance(s.representative, c1, c2, c3) < compatibilityThreshold)
                 {
                     s.members.Add(genome);
+                    genome.speciesID = s.specieID;
                     foundSpecies = true;
                     break;
                 }
@@ -196,6 +197,7 @@ public class NEAT {
             if (!foundSpecies)
             {
                 Specie newSpecie = new Specie(globalSpecieIDCounter++, genome);
+                genome.speciesID = newSpecie.specieID;
                 species.Add(newSpecie);
             }
 

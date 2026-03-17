@@ -8,6 +8,7 @@ using System.Collections.Generic;
 [System.Serializable]
 public class Genome {
     public int genomeID;
+    public int speciesID = -1;
     public List<ConnectionGene> connections = new List<ConnectionGene>();
     public List<NodeGene> nodes = new List<NodeGene>();
     public float fitness;

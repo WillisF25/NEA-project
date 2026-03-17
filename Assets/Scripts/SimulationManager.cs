@@ -295,6 +295,48 @@ public class SimulationManager : MonoBehaviour
     }
 
     /// <summary>
+    /// Wipes all AI progress and restarts from a completely random Generation 0.
+    /// </summary>
+    public void ResetSimulation()
+    {
+        // destroy all living creatures
+        GameObject[] joints = GameObject.FindGameObjectsWithTag("Joint");
+        GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
+        foreach (GameObject j in joints) Destroy(j);
+        foreach (GameObject l in links) Destroy(l);
+
+        // clear camera state
+        activeCreatures = null;
+        focusTarget = null;
+        currentBestCreature = null;
+
+        // reset tracking stats
+        allTimeHigh = 0f;
+        currentGenBest = 0f;
+
+        // move the record flag back to the start
+        if (recordFlag != null)
+            recordFlag.position = new Vector3(0f, recordFlag.position.y, recordFlag.position.z);
+
+        // reinitialise NEAT
+        int jointCount = data.joints.Count;
+        int muscleCount = 0;
+        foreach (var lData in data.links)
+            if (lData.type == "Muscle") muscleCount++;
+
+        neatSystem.generationNumber = 0;
+        neatSystem.InitialisePopulation(jointCount, muscleCount);
+
+        // spawn new gen 0
+        SpawnPopulation();
+
+        // reset timer
+        globalTimer = generationTimeLimit;
+
+        Debug.Log("Simulation reset to Generation 0.");
+    }
+
+    /// <summary>
     /// Switches the scene from Simulaion to CreatureBuilder.
     /// </summary>
     public void BackToBuilder()

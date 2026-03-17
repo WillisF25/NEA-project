@@ -53,11 +53,11 @@ public class StatsPanel : MonoBehaviour
 
         if (best == null || best.assignedGenome == null)
         {
-            if (creatureIDText != null)    creatureIDText.text    = "Genome ID: —";
-            if (speciesIDText != null)     speciesIDText.text     = "Species: —";
-            if (nodeCountText != null)     nodeCountText.text     = "Nodes: —";
-            if (connectionCountText != null) connectionCountText.text = "Connections: —";
-            if (currentDistText != null)   currentDistText.text   = "Distance: —";
+            if (creatureIDText != null)    creatureIDText.text    = "Genome ID: -";
+            if (speciesIDText != null)     speciesIDText.text     = "Species: -";
+            if (nodeCountText != null)     nodeCountText.text     = "Nodes: -";
+            if (connectionCountText != null) connectionCountText.text = "Connections: -";
+            if (currentDistText != null)   currentDistText.text   = "Distance: -";
             return;
         }
 
