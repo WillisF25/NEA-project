@@ -261,6 +261,7 @@ public class CreatureBuilder : MonoBehaviour
         selectedJointA = null; // clear seleciton
         isSimulating = false; // reset mode
         jointMap.Clear(); // clear the joint map
+        Debug.Log("Cleared the current Structure");
     }
 
     /// <summary>
@@ -345,6 +346,7 @@ public class CreatureBuilder : MonoBehaviour
             // create the link using the mapped gameobjs
             CreateLink(idToOgj[lData.sourceJointID], idToOgj[lData.targetJointID]);
         }
+        Debug.Log("Loaded Creatre Structure");
     }
         
     /// <summary> Calls the manager to delete the saved JSON file. </summary>

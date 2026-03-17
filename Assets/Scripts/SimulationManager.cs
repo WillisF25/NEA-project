@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting.Antlr3.Runtime;
 
 /// <summary>
 /// Manages the evolutionary simulaiton.
@@ -36,8 +37,10 @@ public class SimulationManager : MonoBehaviour
     public static Transform focusTarget; 
     private CreatureFollower[] activeCreatures;
 
-    // track how far creatures have ever gotten
-    private float allTimeHigh = 0f;
+    // tracking of creature stats
+    public float allTimeHigh = 0f;
+    public float currentGenBest = 0f;
+    public CreatureFollower currentBestCreature = null;
 
     /// <summary>
     /// Loads the creature blueprint, initialises the NEAT system with 
@@ -345,6 +348,7 @@ public class SimulationManager : MonoBehaviour
         {   
             bestCreature.UpdateMaxDistance();
             focusTarget = bestCreature.leadingJoint;
+            currentBestCreature = bestCreature;
         }
 
         // apply visibilty modes
@@ -406,6 +410,7 @@ public class SimulationManager : MonoBehaviour
                 currentMaxFitness = creature.currentFitness;
             }
         }
+        currentGenBest = currentMaxFitness;
 
         // if we just broke the all time record, move the flag
         if (currentMaxFitness > allTimeHigh)
@@ -439,6 +444,21 @@ public class SimulationManager : MonoBehaviour
         }
 
         Time.timeScale = newValue;
+    }
+
+    /// <summary>
+    /// Returns the spcies ID of the given genome, or -1 if not found
+    /// </summary>
+    public int GetSpecieID(Genome g)
+    {
+        foreach (Specie s in neatSystem.species)
+        {
+            foreach (Genome m in s.members)
+            {
+                if (m ==g) return s.specieID;
+            }
+        }
+        return -1;
     }
 
     /// <summary>
