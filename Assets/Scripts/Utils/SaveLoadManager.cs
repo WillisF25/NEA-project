@@ -47,7 +47,7 @@ public class SaveLoadManager {
         
         if (!File.Exists(path)) // presence check
         {
-            Debug.LogWarning("File not found: " + path);
+            Debug.LogError("File not found: " + path);
             return null;
         }
 

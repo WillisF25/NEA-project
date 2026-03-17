@@ -17,7 +17,7 @@ public class BuilderSettingsManager : MonoBehaviour
     public float oscillatorFreq = 2.0f;
 
     [Header("Muscle Physics")]
-    public float muscleStrength = 50f;
+    public float muscleStrength = 75f;
     public float minLenMultiplier = 0.5f;
     public float maxLenMultiplier = 1.5f;
 
