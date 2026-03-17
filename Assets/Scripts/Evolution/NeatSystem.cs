@@ -200,15 +200,15 @@ public class NEAT {
                 genome.speciesID = newSpecie.specieID;
                 species.Add(newSpecie);
             }
+        }
 
-            // remove any species with 0 creature
-            species.RemoveAll(s => s.members.Count == 0);
+        // remove any species with 0 creature
+        species.RemoveAll(s => s.members.Count == 0);
 
-            // update representatives for next gen
-            foreach (Specie s in species)
-            {
-                if (s.members.Count >0) s.representative = s.members[0];
-            }
+        // update representatives for next gen
+        foreach (Specie s in species)
+        {
+            if (s.members.Count >0) s.representative = s.members[0];
         }
     }
 

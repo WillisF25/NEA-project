@@ -159,6 +159,7 @@ public class SimulationManager : MonoBehaviour
         neatSystem.Speciate();
         neatSystem.AdjustFitness();
         neatSystem.Reproduce();
+        neatSystem.Speciate();
 
         // clean up old gen's bodies
         GameObject[] joints = GameObject.FindGameObjectsWithTag("Joint");
