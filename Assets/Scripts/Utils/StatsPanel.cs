@@ -67,7 +67,7 @@ public class StatsPanel : MonoBehaviour
             creatureIDText.text = $"Genome ID: {g.genomeID}";
 
         if (speciesIDText != null)
-            speciesIDText.text = $"Species: {simManager.GetSpecieID(g)}";
+            speciesIDText.text = $"Species: {g.speciesID}";
 
         if (nodeCountText != null)
             nodeCountText.text = $"Nodes: {g.nodes.Count}";
