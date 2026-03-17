@@ -311,10 +311,6 @@ public class SimulationManager : MonoBehaviour
         focusTarget = null;
         currentBestCreature = null;
 
-        // reset tracking stats
-        allTimeHigh = 0f;
-        currentGenBest = 0f;
-
         // move the record flag back to the start
         if (recordFlag != null)
             recordFlag.position = new Vector3(0f, recordFlag.position.y, recordFlag.position.z);
@@ -333,6 +329,12 @@ public class SimulationManager : MonoBehaviour
 
         // reset timer
         globalTimer = generationTimeLimit;
+
+        // reset tracking stats and flag
+        allTimeHigh = 0f;
+        currentGenBest = 0f;
+        if (recordFlag != null)
+            recordFlag.position = new Vector3(0f, recordFlag.position.y, recordFlag.position.z);
 
         Debug.Log("Simulation reset to Generation 0.");
     }
