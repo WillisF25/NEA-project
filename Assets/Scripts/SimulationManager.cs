@@ -303,8 +303,8 @@ public class SimulationManager : MonoBehaviour
         // destroy all living creatures
         GameObject[] joints = GameObject.FindGameObjectsWithTag("Joint");
         GameObject[] links = GameObject.FindGameObjectsWithTag("Link");
-        foreach (GameObject j in joints) Destroy(j);
-        foreach (GameObject l in links) Destroy(l);
+        foreach (GameObject j in joints) DestroyImmediate(j);
+        foreach (GameObject l in links) DestroyImmediate(l);
 
         // clear camera state
         activeCreatures = null;
