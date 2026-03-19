@@ -356,7 +356,14 @@ public class CreatureBuilder : MonoBehaviour
     /// Checks for valid design rules, saves the creature, and switches to the Simulation scene.
     /// </summary>
     public void StartSimulation()
-    {
+    {   
+        // Joint presence check
+        if (currentStructure.joints.Count <= 0)
+        {   
+            Debug.LogWarning("Builder canvas is empty.");
+            return;
+        }
+
         // Muscle presence check
         bool hasMuscle = false;
         foreach (Link l in currentStructure.links)

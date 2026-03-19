@@ -5892,14 +5892,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BuilderSettingsManager
   mutateWeightRate: 0.8
-  addNodeRate: 0.1
+  addNodeRate: 0.03
   addConnectionRate: 0.05
   compatibilityThreshold: 2
   populationLimit: 50
   generationTimeLimit: 20
   timeScale: 1
   oscillatorFreq: 2
-  muscleStrength: 100
+  muscleStrength: 75
   minLenMultiplier: 0.5
   maxLenMultiplier: 1.5
 --- !u!4 &2084077050
